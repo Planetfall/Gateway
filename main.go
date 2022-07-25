@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	_ "github.com/Dadard29/planetfall/musicresearcher"
 	"github.com/gin-gonic/gin"
@@ -22,5 +23,13 @@ func main() {
 		}
 	})
 
-	r.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("defaulting to %s", port)
+	}
+
+	log.Printf("listening on port %s", port)
+
+	r.Run(":" + port)
 }
