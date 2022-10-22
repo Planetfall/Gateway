@@ -72,20 +72,21 @@ type errorMessage struct {
 	Message string `json:"message"`
 }
 
-func badRequest(c *gin.Context) {
-	status := http.StatusBadRequest
+func formatError(err error, c *gin.Context, status int, message string) {
+	log.Println(err)
 	msg := errorMessage{
 		Status:  status,
-		Message: "Wrong parameters supplied",
+		Message: message,
 	}
-	c.JSON(status, &msg)
+	c.JSON(status, msg)
 }
 
-func internalError(c *gin.Context) {
-	status := http.StatusInternalServerError
-	msg := errorMessage{
-		Status:  status,
-		Message: "Something went wrong on my side",
-	}
-	c.JSON(status, &msg)
+func badRequest(err error, c *gin.Context) {
+	formatError(err, c,
+		http.StatusBadRequest, "Wrong parameters supplied")
+}
+
+func internalError(err error, c *gin.Context) {
+	formatError(err, c,
+		http.StatusInternalServerError, "Something went wrong on my side")
 }

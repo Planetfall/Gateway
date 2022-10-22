@@ -14,13 +14,13 @@ const audience = "https://music-researcher-twecq3u42q-ew.a.run.app"
 func musicSearchController(c *gin.Context) {
 	var searchParams SearchParams
 	if err := (c.ShouldBind(&searchParams)); err != nil {
-		badRequest(c)
+		badRequest(err, c)
 		return
 	}
 
 	results, err := musicSearch(searchParams.Query)
 	if err != nil {
-		internalError(c)
+		internalError(err, c)
 		return
 	}
 
