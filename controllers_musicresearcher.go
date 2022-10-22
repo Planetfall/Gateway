@@ -35,7 +35,7 @@ func musicSearch(query string) (*pb.Results, error) {
 	}
 	defer conn.Close()
 
-	ctx, cancel, err := getAuthenticatedCtx(conn)
+	ctx, _, err := getAuthenticatedCtx(conn)
 	if err != nil {
 		return nil, err
 	}
