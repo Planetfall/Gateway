@@ -33,13 +33,13 @@ func musicSearch(query string) (*pb.Results, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
-	ctx, err := getAuthenticatedCtx(conn)
+	ctx, cancel, err := getAuthenticatedCtx(conn)
 	if err != nil {
 		return nil, err
 	}
-
-	defer conn.Close()
+	defer cancel()
 
 	c := pb.NewMusicResearcherClient(conn)
 
