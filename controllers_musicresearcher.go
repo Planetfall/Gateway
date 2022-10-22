@@ -39,7 +39,7 @@ func musicSearch(query string) (*pb.Results, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer cancel()
+	// defer cancel()
 
 	c := pb.NewMusicResearcherClient(conn)
 
