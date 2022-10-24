@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/errorreporting"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc"
@@ -79,6 +80,9 @@ func formatError(err error, c *gin.Context, status int, message string) {
 		Message: message,
 	}
 	c.JSON(status, msg)
+	errorReporting.Report(errorreporting.Entry{
+		Error: err,
+	})
 }
 
 func badRequest(err error, c *gin.Context) {
