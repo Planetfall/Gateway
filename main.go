@@ -31,7 +31,7 @@ func main() {
 		log.Fatalf("metadata.ProjectID: %v\n", err)
 	}
 
-	log.Println("initializing error reporting")
+	log.Println("initializing error reporting...")
 	errorReporting, err = errorreporting.NewClient(ctx, projectID, errorreporting.Config{
 		ServiceName: serviceName,
 		OnError: func(err error) {

@@ -42,29 +42,29 @@ func getGrpcConn(host string, audience string) (*grpc.ClientConn, error) {
 
 // set up request context with authentication
 // https://cloud.google.com/run/docs/triggering/grpc#request-auth
-func getAuthenticatedCtx(conn *grpc.ClientConn) (context.Context, context.CancelFunc, error) {
+func getAuthenticatedCtx(conn *grpc.ClientConn) (context.Context, error) {
 
 	// temp ctx to retrieve an auth token
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	// defer cancel()
 
 	// create auth context with token
 	tokenSource, err := idtoken.NewTokenSource(ctx, audience)
 	if err != nil {
 		log.Printf("idtoken.NewTokenSource: %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	token, err := tokenSource.Token()
 	if err != nil {
 		log.Printf("tokenSource.Token: %v", err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// set the token into a grpc context
 	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token.AccessToken)
 
-	return ctx, cancel, nil
+	return ctx, nil
 }
 
 // errors

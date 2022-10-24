@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	_ "github.com/Dadard29/planetfall/musicresearcher"
@@ -35,11 +36,11 @@ func musicSearch(query string) (*pb.Results, error) {
 	}
 	defer conn.Close()
 
-	ctx, _, err := getAuthenticatedCtx(conn)
+	ctx, err := getAuthenticatedCtx(conn)
 	if err != nil {
+		log.Println("failed getting authenticated ctx")
 		return nil, err
 	}
-	// defer cancel()
 
 	c := pb.NewMusicResearcherClient(conn)
 
