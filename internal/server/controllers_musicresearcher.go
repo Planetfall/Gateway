@@ -11,7 +11,7 @@ import (
 )
 
 type searchParams struct {
-	query string `form:"q"`
+	Query string `form:"q"`
 }
 
 func (s *Server) musicSearch(c *gin.Context) {
@@ -35,7 +35,7 @@ func (s *Server) musicSearch(c *gin.Context) {
 	log.Printf("got search params: %v\n", sp)
 
 	results, err := s.cls.musicResearcher.Search(ctx, &musicResearcherPb.Parameters{
-		Query:        sp.query,
+		Query:        sp.Query,
 		GenreFilters: []string{},
 		Limit:        10,
 	})
