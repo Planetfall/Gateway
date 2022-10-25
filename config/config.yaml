@@ -1,3 +1,4 @@
-music-researcher:
-  host: mr-host
-  audience: mr-audience
+services:
+  music-researcher:
+    host: music-researcher-twecq3u42q-ew.a.run.app:443
+    audience: https://music-researcher-twecq3u42q-ew.a.run.app
