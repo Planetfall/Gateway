@@ -133,5 +133,5 @@ var MusicResearcher_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "musicresearcher/music_researcher.proto",
+	Metadata: "Music-Researcher/api/music_researcher.proto",
 }

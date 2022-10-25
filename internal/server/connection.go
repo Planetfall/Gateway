@@ -1,24 +1,47 @@
-package main
+package server
 
 import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"log"
-	"net/http"
 	"time"
 
-	"cloud.google.com/go/errorreporting"
-	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
+type connection struct {
+	grpcConn    *grpc.ClientConn
+	tokenSource oauth2.TokenSource
+}
+
+func newConnection(host string, audience string) (*connection, error) {
+	c := &connection{}
+	grpcConn, err := c.newGrpcConn(host)
+	if err != nil {
+		log.Printf("failed to create connection for %s\n", host)
+		return nil, err
+	}
+
+	tokenSource, err := c.newTokenSource(audience)
+	if err != nil {
+		log.Printf("failed to get token token source for %s\n", audience)
+		return nil, err
+	}
+	c.grpcConn = grpcConn
+	c.tokenSource = tokenSource
+
+	return c, nil
+}
+
 // init grpc conn for a GCloud microservice
 // https://cloud.google.com/run/docs/triggering/grpc#connect
-func getGrpcConn(host string, audience string) (*grpc.ClientConn, error) {
+func (c *connection) newGrpcConn(host string) (*grpc.ClientConn, error) {
+
 	var opts []grpc.DialOption
 	systemRoots, err := x509.SystemCertPool()
 	if err != nil {
@@ -42,11 +65,10 @@ func getGrpcConn(host string, audience string) (*grpc.ClientConn, error) {
 
 // set up request context with authentication
 // https://cloud.google.com/run/docs/triggering/grpc#request-auth
-func getAuthenticatedCtx(conn *grpc.ClientConn) (context.Context, error) {
+func (c *connection) newTokenSource(
+	audience string) (oauth2.TokenSource, error) {
 
-	// temp ctx to retrieve an auth token
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	// defer cancel()
 
 	// create auth context with token
 	tokenSource, err := idtoken.NewTokenSource(ctx, audience)
@@ -55,42 +77,20 @@ func getAuthenticatedCtx(conn *grpc.ClientConn) (context.Context, error) {
 		return nil, err
 	}
 
-	token, err := tokenSource.Token()
+	return tokenSource, nil
+}
+
+func (c *connection) getAuthenticatedCtx(ctx context.Context) (context.Context, error) {
+
+	token, err := c.tokenSource.Token()
 	if err != nil {
 		log.Printf("tokenSource.Token: %v", err)
 		return nil, err
 	}
 
 	// set the token into a grpc context
-	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", "Bearer "+token.AccessToken)
+	ctx = grpcMetadata.AppendToOutgoingContext(
+		ctx, "authorization", "Bearer "+token.AccessToken)
 
 	return ctx, nil
-}
-
-// errors
-type errorMessage struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
-}
-
-func formatError(err error, c *gin.Context, status int, message string) {
-	log.Println(err)
-	msg := errorMessage{
-		Status:  status,
-		Message: message,
-	}
-	c.JSON(status, msg)
-	errorReporting.Report(errorreporting.Entry{
-		Error: err,
-	})
-}
-
-func badRequest(err error, c *gin.Context) {
-	formatError(err, c,
-		http.StatusBadRequest, "Wrong parameters supplied")
-}
-
-func internalError(err error, c *gin.Context) {
-	formatError(err, c,
-		http.StatusInternalServerError, "Something went wrong on my side")
 }
