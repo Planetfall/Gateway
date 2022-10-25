@@ -6,6 +6,8 @@ steps:
     - 'build'
     - '-t'
     - 'europe-west2-docker.pkg.dev/$PROJECT_ID/repo-docker/front:$COMMIT_SHA'
+    - '-f'
+    - './build/Dockerfile'
     - '.'
 
 # Push the container image to Container Registry
