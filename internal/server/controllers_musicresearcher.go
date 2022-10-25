@@ -10,9 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const host = "music-researcher-twecq3u42q-ew.a.run.app:443"
-const audience = "https://music-researcher-twecq3u42q-ew.a.run.app"
-
 type searchParams struct {
 	query string `form:"q"`
 }
@@ -34,6 +31,8 @@ func (s *Server) musicSearch(c *gin.Context) {
 		s.internalError(err, c)
 		return
 	}
+
+	log.Printf("got search params: %v\n", sp)
 
 	results, err := s.cls.musicResearcher.Search(ctx, &musicResearcherPb.Parameters{
 		Query:        sp.query,
