@@ -1,5 +1,7 @@
 FROM golang:1.18-alpine
 
+ENV APP_ENV=production
+
 WORKDIR /usr/src/app
 
 ENV GIN_MODE=release
@@ -11,4 +13,6 @@ RUN apk add git
 COPY . .
 RUN go build -v -o /usr/local/bin/app ./cmd/server
 
-CMD ["app"]
+RUN echo "running in ${APP_ENV}"
+
+CMD app --env ${APP_ENV}
