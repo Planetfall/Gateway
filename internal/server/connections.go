@@ -2,28 +2,52 @@ package server
 
 import (
 	"log"
-
-	"github.com/spf13/viper"
 )
 
-type connections struct {
-	musicResearcher *connection
+type ConnectionConfigList map[string]ConnectionConfig
+type ConnectionConfig struct {
+	Host     string `mapstructure:"host"`
+	Audience string `mapstructure:"audience"`
 }
 
-func newConnections() (*connections, error) {
-	conns := &connections{}
+const (
+	conn_MusicResearcher = "music-researcher"
+)
 
-	// music-researcher
-	musicResearcher, err := newConnection(
-		viper.GetString("services.music-researcher.host"),
-		viper.GetString("services.music-researcher.audience"),
-	)
-	if err != nil {
-		log.Printf("failed setting up connection to music-researcher: %v\n", err)
-		return nil, err
+type connections map[string]*connection
+
+func newConnections(
+	connCfgList ConnectionConfigList, insecure bool) (connections, error) {
+
+	conns := connections{}
+
+	for connectionName, connectionConfig := range connCfgList {
+		var err error
+		var conn *connection
+		if insecure == false {
+			conn, err = newConnection(
+				connectionConfig.Host, connectionConfig.Audience)
+		}
+
+		if insecure == true {
+			conn, err = newConnectionInsecure(connectionConfig.Host)
+		}
+
+		if err != nil {
+			log.Printf(
+				"failed to set up connection to %s: %v\n", connectionName, err)
+		}
+		conns[connectionName] = conn
 	}
 
-	conns.musicResearcher = musicResearcher
-
 	return conns, nil
+}
+
+func (cs connections) Close() error {
+	for _, conn := range cs {
+		if err := conn.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

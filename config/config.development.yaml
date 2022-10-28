@@ -1,0 +1,5 @@
+services:
+  music-researcher:
+    host: localhost:8080
+    audience: https://localhost
+

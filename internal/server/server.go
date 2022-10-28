@@ -1,9 +1,8 @@
 package server
 
 import (
-	"context"
+	"fmt"
 	"log"
-	"net/http"
 
 	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/errorreporting"
@@ -18,49 +17,46 @@ type Server struct {
 	errorReporting *errorreporting.Client
 	metadataClient *metadata.Client
 
-	conns *connections
+	conns connections
 	cls   *clients
 }
 
-func NewServer(serviceName string, port string) (*Server, error) {
-	ctx := context.Background()
+func NewServer(
+	env string, serviceName string, port string,
+	connCfgList ConnectionConfigList,
+) (*Server, error) {
 
-	log.Println("initializing metadata client...")
-	metadataClient := metadata.NewClient(&http.Client{})
-	projectID, err := metadataClient.ProjectID()
-	if err != nil {
-		log.Printf("metadata.ProjectID: %v\n", err)
-		return nil, err
+	log.Println("setting up connections to services...")
+	insecure := false
+	if env == Development {
+		// DEV env enforce the GRPC connections to be insecure
+		insecure = true
+		log.Println("INSECURE connections activated (no TLS, no token)")
+		log.Println("DO NOT USE INSECURE IN PRODUCTION")
 	}
-
-	log.Println("initializing error reporting...")
-	errorReporting, err := errorreporting.NewClient(ctx, projectID,
-		errorreporting.Config{
-			ServiceName: serviceName,
-			OnError: func(err error) {
-				log.Printf("Could not log error: %v", err)
-			}},
-	)
+	conns, err := newConnections(connCfgList, insecure)
 	if err != nil {
-		log.Printf("errorreporting.NewClient: %v\n", err)
-		return nil, err
-	}
-
-	conns, err := newConnections()
-	if err != nil {
-		log.Printf("failed settings up connections: %v\n", err)
+		log.Println("failed setting up connections")
 		return nil, err
 	}
 	cls := newClients(conns)
 
-	serv := &Server{
-		port:           port,
-		router:         nil,
-		errorReporting: errorReporting,
-		metadataClient: metadataClient,
-		serviceName:    serviceName,
-		conns:          conns,
-		cls:            cls,
+	var serv *Server
+	switch env {
+	case Development:
+		serv, err = newServerDevelopment(serviceName, port, conns, cls)
+		break
+	case Production:
+		serv, err = newServerProduction(serviceName, port, conns, cls)
+		break
+	default:
+		return nil, fmt.Errorf(
+			"failed to create server with unsupported env: %s", env)
+	}
+
+	if err != nil {
+		log.Println("failed setting up the server")
+		return nil, err
 	}
 
 	r := gin.Default()
@@ -73,4 +69,19 @@ func NewServer(serviceName string, port string) (*Server, error) {
 func (s *Server) Start() {
 	log.Printf("listening on port %s", s.port)
 	s.router.Run(":" + s.port)
+}
+
+func (s *Server) Close() error {
+	// closing grpc connections
+	if err := s.conns.Close(); err != nil {
+		return err
+	}
+
+	// closing error reportings
+	if s.errorReporting != nil {
+		if err := s.errorReporting.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -25,14 +25,12 @@ func (s *Server) musicSearch(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	ctx, err := s.conns.musicResearcher.getAuthenticatedCtx(ctx)
+	ctx, err := s.conns[conn_MusicResearcher].getAuthenticatedCtx(ctx)
 	if err != nil {
-		log.Println("failed getting authenticated ctx")
+		log.Println("musicResearcher.getAuthenticatedCtx: %v\n", err)
 		s.internalError(err, c)
 		return
 	}
-
-	log.Printf("got search params: %v\n", sp)
 
 	results, err := s.cls.musicResearcher.Search(ctx, &musicResearcherPb.Parameters{
 		Query:        sp.Query,

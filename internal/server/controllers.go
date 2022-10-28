@@ -21,9 +21,11 @@ func (s *Server) formatError(err error, c *gin.Context, status int, message stri
 		Message: message,
 	}
 	c.JSON(status, msg)
-	s.errorReporting.Report(errorreporting.Entry{
-		Error: err,
-	})
+	if s.errorReporting != nil {
+		s.errorReporting.Report(errorreporting.Entry{
+			Error: err,
+		})
+	}
 }
 
 func (s *Server) badRequest(err error, c *gin.Context) {
