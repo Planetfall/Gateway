@@ -1,0 +1,77 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "the purpose of this application is provide a front centralized gateway\nin order to interact with multiple GRPC microservices, hosted in\nGoogle Cloud.\n\nTerms Of Services:\n\nno TOS at the moment",
+    "title": "Gateway Front API.",
+    "contact": {
+      "email": "florian.charpentier67@gmail.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    },
+    "version": "0.0.1"
+  },
+  "host": "api.dadard.fr",
+  "basePath": "/",
+  "paths": {
+    "/music-researcher/search": {
+      "get": {
+        "description": "It returns matching tracks, artists and albums",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "Search into Spotify for some music, using a query parameter and some\nfilters",
+        "operationId": "search",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "main user query",
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "description": "main user query",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {},
+          "400": {
+            "$ref": "#/responses/genericError"
+          },
+          "500": {
+            "$ref": "#/responses/genericError"
+          }
+        }
+      }
+    }
+  },
+  "responses": {
+    "genericError": {
+      "description": "An errorMessage is a generic error used to print user friendly message and\nappropriate status code.",
+      "headers": {
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    }
+  }
+}

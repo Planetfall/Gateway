@@ -1,4 +1,4 @@
-module github.com/Dadard29/planetfall/gateway
+module github.com/planetfall/gateway
 
 go 1.18
 

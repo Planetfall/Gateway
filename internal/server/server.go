@@ -4,66 +4,51 @@ import (
 	"fmt"
 	"log"
 
-	"cloud.google.com/go/compute/metadata"
-	"cloud.google.com/go/errorreporting"
-	"github.com/gin-gonic/gin"
+	"github.com/planetfall/gateway/internal/router"
+	"github.com/planetfall/gateway/pkg/options"
 )
 
 type Server struct {
 	port        string
 	serviceName string
-	router      *gin.Engine
-
-	errorReporting *errorreporting.Client
-	metadataClient *metadata.Client
-
-	conns connections
-	cls   *clients
+	router      *router.Router
+	gcloud      *Gcloud
 }
 
-func NewServer(
-	env string, serviceName string, port string,
-	connCfgList ConnectionConfigList,
-) (*Server, error) {
+// @title Gateway Front API
+// @version 0.0.1
+// @description This application provides a front gateway allowing you
+// to interact with multiple GRPC microservices hosted in Google Cloud
+// @termsOfService No terms
+// @contact.name Support
+// @contact.email florian.charpentier67@gmail.com
+// @license.name MIT
+// @license.url http://opensource.org/licenses/MIT
+// @host api.dadard.fr
+// @BasePath /
+// @accept json
+// @produce json
+// @schemes https
+func NewServer(opt options.ServerOptions) (*Server, error) {
 
-	log.Println("setting up connections to services...")
-	insecure := false
-	if env == Development {
-		// DEV env enforce the GRPC connections to be insecure
-		insecure = true
-		log.Println("INSECURE connections activated (no TLS, no token)")
-		log.Println("DO NOT USE INSECURE IN PRODUCTION")
-	}
-	conns, err := newConnections(connCfgList, insecure)
+	gcloud, err := NewGcloud(opt.Env, opt.ServiceName)
 	if err != nil {
-		log.Println("failed setting up connections")
-		return nil, err
-	}
-	cls := newClients(conns)
-
-	var serv *Server
-	switch env {
-	case Development:
-		serv, err = newServerDevelopment(serviceName, port, conns, cls)
-		break
-	case Production:
-		serv, err = newServerProduction(serviceName, port, conns, cls)
-		break
-	default:
-		return nil, fmt.Errorf(
-			"failed to create server with unsupported env: %s", env)
+		return nil, fmt.Errorf("server.NewGcloud: %v", err)
 	}
 
+	router, err := router.NewRouter(
+		opt.SvcConfigMap, gcloud.ErrorReport, opt.Insecure,
+	)
 	if err != nil {
-		log.Println("failed setting up the server")
-		return nil, err
+		return nil, fmt.Errorf("router.NewRouter: %v", err)
 	}
 
-	r := gin.Default()
-	r.GET("/music-researcher/search", serv.musicSearch)
-
-	serv.router = r
-	return serv, nil
+	return &Server{
+		port:        opt.Port,
+		serviceName: opt.ServiceName,
+		router:      router,
+		gcloud:      gcloud,
+	}, nil
 }
 
 func (s *Server) Start() {
@@ -72,16 +57,6 @@ func (s *Server) Start() {
 }
 
 func (s *Server) Close() error {
-	// closing grpc connections
-	if err := s.conns.Close(); err != nil {
-		return err
-	}
-
-	// closing error reportings
-	if s.errorReporting != nil {
-		if err := s.errorReporting.Close(); err != nil {
-			return err
-		}
-	}
+	// fixme
 	return nil
 }

@@ -1,10 +1,14 @@
+//go:generate swagger generate spec -o ../../docs/swagger.json
 package main
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/Dadard29/planetfall/gateway/internal/server"
+	"github.com/planetfall/gateway/internal/server"
+	"github.com/planetfall/gateway/pkg/config"
+	env "github.com/planetfall/gateway/pkg/environments"
+	"github.com/planetfall/gateway/pkg/options"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -18,7 +22,8 @@ func setConfig() {
 	viper.BindEnv("K_SERVICE")
 
 	// from cmd line
-	env := flag.String("env", server.Production, "server environment")
+	env := flag.String("env", env.Production, "server environment")
+	flag.Bool("insecure", false, "insecure connection with microservices if true")
 	flag.Parse()
 	viper.BindPFlags(flag.CommandLine)
 
@@ -34,22 +39,25 @@ func setConfig() {
 
 func main() {
 	setConfig()
-	var connCfgList server.ConnectionConfigList
-	err := viper.UnmarshalKey("services", &connCfgList)
+	var serviceConfigMap config.ServiceConfigMap
+	err := viper.UnmarshalKey("services", &serviceConfigMap)
 	if err != nil {
 		log.Fatalf("failed to load connections config: %v\n", err)
 	}
 	var connNameList []string
-	for connName, _ := range connCfgList {
+	for connName, _ := range serviceConfigMap {
 		connNameList = append(connNameList, connName)
 	}
 	log.Printf("loaded connections %v\n", connNameList)
 
 	server, err := server.NewServer(
-		viper.GetString("env"),
-		viper.GetString("K_SERVICE"),
-		viper.GetString("PORT"),
-		connCfgList,
+		options.ServerOptions{
+			Env:          viper.GetString("env"),
+			ServiceName:  viper.GetString("K_SERVICE"),
+			Port:         viper.GetString("PORT"),
+			Insecure:     viper.GetBool("insecure"),
+			SvcConfigMap: serviceConfigMap,
+		},
 	)
 	if err != nil {
 		log.Fatalf("failed creating the server: %v\n", err)
