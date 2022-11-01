@@ -15,20 +15,21 @@ type Server struct {
 	gcloud      *Gcloud
 }
 
-// @title Gateway Front API
-// @version 0.0.1
-// @description This application provides a front gateway allowing you
-// to interact with multiple GRPC microservices hosted in Google Cloud
+// @title          Gateway Front API
+// @version        0.0.1
+// @description    This application provides a front gateway allowing you
+// @description    to interact with multiple GRPC microservices hosted
+// @description    in Google Cloud
 // @termsOfService No terms
-// @contact.name Support
-// @contact.email florian.charpentier67@gmail.com
-// @license.name MIT
-// @license.url http://opensource.org/licenses/MIT
-// @host api.dadard.fr
-// @BasePath /
-// @accept json
-// @produce json
-// @schemes https
+// @contact.name   Support
+// @contact.email  florian.charpentier67@gmail.com
+// @license.name   MIT
+// @license.url    http://opensource.org/licenses/MIT
+// @host           api.dadard.fr
+// @BasePath       /
+// @accept         json
+// @produce        json
+// @schemes        https
 func NewServer(opt options.ServerOptions) (*Server, error) {
 
 	gcloud, err := NewGcloud(opt.Env, opt.ServiceName)

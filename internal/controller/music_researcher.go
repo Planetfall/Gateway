@@ -37,6 +37,13 @@ type searchParam struct {
 	Query string `form:"q"`
 }
 
+// @Summary     Music search
+// @Description Searchs for music in Spotify API
+// @Accept      json
+// @Produces    json
+// @Param       q   query    string true "Main user query"
+// @Success     200 {object} pb.Results
+// @Router      /music-researcher/search [get]
 func (c *MusicResearcherController) Search(g *gin.Context) {
 	var sp searchParam
 	if err := g.ShouldBind(&sp); err != nil {

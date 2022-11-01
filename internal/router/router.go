@@ -5,8 +5,11 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/planetfall/gateway/docs"
 	c "github.com/planetfall/gateway/internal/controller"
 	"github.com/planetfall/gateway/pkg/config"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 const baseUrl = "/"
@@ -43,8 +46,13 @@ func NewRouter(
 			return nil, fmt.Errorf("controller.NewMusicResearcherController: %v", err)
 		}
 
-		g.GET(formatRoute(musicResearcherName, "search"), mr.Search)
+		musicResearcherGroup := g.Group("/music-researcher")
+		{
+			musicResearcherGroup.GET("/search", mr.Search)
+		}
 	}
+
+	g.GET("/swagger-ui/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &Router{
 		engine: g,

@@ -47,7 +47,7 @@ func newGcloudDevelopment(_ string) (*Gcloud, error) {
 }
 
 func newGcloudProduction(serviceName string) (*Gcloud, error) {
-	log.Printf("GCloud components enabled in %s\n", env.Production)
+	log.Printf("GCloud components enabled in %s, initializing...\n", env.Production)
 	ctx := context.Background()
 
 	metadataClient := metadata.NewClient(&http.Client{})

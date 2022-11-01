@@ -1,0 +1,100 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  musicresearcher.Album:
+    properties:
+      imageUrl:
+        type: string
+      name:
+        type: string
+      releaseDate:
+        type: string
+      spotifyUrl:
+        type: string
+    type: object
+  musicresearcher.Artist:
+    properties:
+      genres:
+        items:
+          type: string
+        type: array
+      imageUrl:
+        type: string
+      name:
+        type: string
+      spotifyUrl:
+        type: string
+    type: object
+  musicresearcher.Results:
+    properties:
+      albums:
+        items:
+          $ref: '#/definitions/musicresearcher.Album'
+        type: array
+      artists:
+        items:
+          $ref: '#/definitions/musicresearcher.Artist'
+        type: array
+      tracks:
+        items:
+          $ref: '#/definitions/musicresearcher.Track'
+        type: array
+    type: object
+  musicresearcher.Track:
+    properties:
+      album:
+        $ref: '#/definitions/musicresearcher.Album'
+      artists:
+        items:
+          $ref: '#/definitions/musicresearcher.Artist'
+        type: array
+      durationMs:
+        type: integer
+      name:
+        type: string
+      popularity:
+        type: integer
+      previewUrl:
+        type: string
+      spotifyUrl:
+        type: string
+    type: object
+host: api.dadard.fr
+info:
+  contact:
+    email: florian.charpentier67@gmail.com
+    name: Support
+  description: |-
+    This application provides a front gateway allowing you
+    to interact with multiple GRPC microservices hosted
+    in Google Cloud
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  termsOfService: No terms
+  title: Gateway Front API
+  version: 0.0.1
+paths:
+  /music-researcher/search:
+    get:
+      consumes:
+      - application/json
+      description: Searchs for music in Spotify API
+      parameters:
+      - description: Main user query
+        in: query
+        name: q
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/musicresearcher.Results'
+      summary: Music search
+produces:
+- application/json
+schemes:
+- https
+swagger: "2.0"
