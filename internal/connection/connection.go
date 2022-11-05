@@ -1,7 +1,7 @@
 package connection
 
 import (
-	"log"
+	"fmt"
 
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
@@ -27,14 +27,12 @@ func newConnectionSecure(
 	// build a secure Connection
 	grpcConn, err := newGrpcConn(host)
 	if err != nil {
-		log.Printf("failed to create connection to %s\n", host)
-		return nil, err
+		return nil, fmt.Errorf("newGrpcConn: %v", err)
 	}
 
 	tokenSource, err := newTokenSource(audience)
 	if err != nil {
-		log.Printf("failed to get token token source for %s\n", audience)
-		return nil, err
+		return nil, fmt.Errorf("newTokenSource: %v", err)
 	}
 
 	return &Connection{
@@ -50,8 +48,7 @@ func newConnectionInsecure(
 	// build an INSECURE connection
 	grpcConn, err := newGrpcConnInsecure(host)
 	if err != nil {
-		log.Printf("failed to create INSECURE connection to %s\n", host)
-		return nil, err
+		return nil, fmt.Errorf("newGrpcConnInsecure: %v", err)
 	}
 
 	// does not bother creating a token source

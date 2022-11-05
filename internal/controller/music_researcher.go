@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/planetfall/gateway/internal/connection"
-	pb "github.com/planetfall/gateway/pkg/musicresearcher"
+	pb "github.com/planetfall/genproto/pkg/musicresearcher/v1"
 )
 
 type MusicResearcherController struct {
@@ -37,21 +37,34 @@ func NewMusicResearcherController(
 	}, nil
 }
 
+func (c *MusicResearcherController) Close() error {
+	if err := c.conn.Close(); err != nil {
+		return fmt.Errorf("connection.Close: %v", err)
+	}
+	return nil
+}
+
 type searchParam struct {
-	Query string `form:"q"`
+	Query     string   `form:"q"`
+	GenreList []string `form:"genre"`
+	Limit     int      `form:"limit"`
 }
 
 // @Summary     Music search
 // @Description Searchs for music in Spotify API
 // @Accept      json
 // @Produces    json
-// @Param       q   query    string true "Main user query"
-// @Success     200 {object} pb.Results
+// @Param       q     query    string   true "Main user query"
+// @Param       genre query    []string true "Genre list"
+// @Param       limit query    int      true "Limit result count"
+// @Success     200   {object} pb.Results
 // @Router      /music-researcher/search [get]
 func (c *MusicResearcherController) Search(g *gin.Context) {
+
+	// params
 	var sp searchParam
 	if err := g.ShouldBind(&sp); err != nil {
-		c.badRequest(fmt.Errorf("gin.Context.ShouldBind: %v", err), g)
+		c.badRequest(fmt.Errorf("gin.ShouldBind: %v", err), g)
 		return
 	}
 
@@ -64,13 +77,12 @@ func (c *MusicResearcherController) Search(g *gin.Context) {
 		return
 	}
 
-	// fixme
 	results, err := c.client.Search(
 		ctx,
 		&pb.Parameters{
 			Query:        sp.Query,
-			GenreFilters: []string{},
-			Limit:        10,
+			GenreFilters: sp.GenreList,
+			Limit:        int32(sp.Limit),
 		},
 	)
 	if err != nil {

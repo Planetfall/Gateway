@@ -21,20 +21,21 @@ type DownloadController struct {
 }
 
 type DownloadControllerOptions struct {
+	ControllerOptions
+
 	ProjectID  string
 	LocationID string
 	QueueID    string
 }
 
 func NewDownloadController(
-	dOpt DownloadControllerOptions, opt ControllerOptions,
-) (*DownloadController, error) {
+	dOpt DownloadControllerOptions) (*DownloadController, error) {
 
 	ctrl := Controller{
-		opt.ErrorReportCallback,
+		dOpt.ErrorReportCallback,
 	}
 
-	jobUrl := fmt.Sprintf("%s/download/url", opt.Host)
+	jobUrl := fmt.Sprintf("%s/download/url", dOpt.Host)
 
 	ctx := context.Background()
 	taskClient, err := cloudtasks.NewClient(ctx)
@@ -56,6 +57,14 @@ func NewDownloadController(
 	}, nil
 }
 
+func (c *DownloadController) Close() error {
+	if err := c.taskClient.Close(); err != nil {
+		return fmt.Errorf("cloudtasks.Close: %v")
+	}
+
+	return nil
+}
+
 // @Description Param to send to the download job
 type downloadJobParam struct {
 	Url  string `json:"url"` // the youtube url to use for download
@@ -70,9 +79,9 @@ type downloadJobParam struct {
 // @Description Execute the Youtube-DL job using Cloud Task
 // @Accept      json
 // @Produces    json
-// @Param       q   body     true "Main user query"
-// @Success     200 {object} pb.Results
-// @Router      /music-researcher/search [get]
+// @Param       payload body downloadJobParam true "Parameters to send to job"
+// @Success     201
+// @Router      /download/url [post]
 func (c *DownloadController) DownloadJob(g *gin.Context) {
 	var dParam downloadJobParam
 	if err := g.ShouldBind(&dParam); err != nil {
@@ -109,5 +118,5 @@ func (c *DownloadController) DownloadJob(g *gin.Context) {
 		return
 	}
 
-	g.JSON(http.StatusOK, &createdTask)
+	g.JSON(http.StatusCreated, &createdTask)
 }

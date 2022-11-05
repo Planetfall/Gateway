@@ -4,9 +4,9 @@ go 1.18
 
 require (
 	cloud.google.com/go/cloudtasks v1.8.0
-	cloud.google.com/go/compute/metadata v0.2.1
 	cloud.google.com/go/errorreporting v0.2.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/planetfall/genproto v0.0.0-20221105233805-2ef402efbf6e
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.13.0
 	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
@@ -22,6 +22,7 @@ require (
 require (
 	cloud.google.com/go v0.105.0 // indirect
 	cloud.google.com/go/compute v1.12.1 // indirect
+	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

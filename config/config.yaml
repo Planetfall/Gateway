@@ -1,8 +1,8 @@
 project-id: echo-slam-planetfall
 services:
   music-researcher:
-    host: localhost:8080
-    audience: https://localhost
+    host: music-researcher-twecq3u42q-ew.a.run.app:443
+    audience: https://music-researcher-twecq3u42q-ew.a.run.ap
 
   youtube-dl-job:
     host: https://youtube-dl-job-twecq3u42q-ew.a.run.app

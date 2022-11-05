@@ -30,6 +30,31 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/download/url": {
+            "post": {
+                "description": "Execute the Youtube-DL job using Cloud Task",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Download and save a new music file",
+                "parameters": [
+                    {
+                        "description": "Parameters to send to job",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.downloadJobParam"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                }
+            }
+        },
         "/music-researcher/search": {
             "get": {
                 "description": "Searchs for music in Spotify API",
@@ -42,6 +67,23 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Main user query",
                         "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Genre list",
+                        "name": "genre",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit result count",
+                        "name": "limit",
                         "in": "query",
                         "required": true
                     }
@@ -58,6 +100,34 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controller.downloadJobParam": {
+            "description": "Param to send to the download job",
+            "type": "object",
+            "properties": {
+                "meta": {
+                    "description": "metadata infos to format the file",
+                    "type": "object",
+                    "properties": {
+                        "album": {
+                            "description": "the album",
+                            "type": "string"
+                        },
+                        "artist": {
+                            "description": "the artist",
+                            "type": "string"
+                        },
+                        "track": {
+                            "description": "the music track",
+                            "type": "string"
+                        }
+                    }
+                },
+                "url": {
+                    "description": "the youtube url to use for download",
+                    "type": "string"
+                }
+            }
+        },
         "musicresearcher.Album": {
             "type": "object",
             "properties": {

@@ -2,6 +2,26 @@ basePath: /
 consumes:
 - application/json
 definitions:
+  controller.downloadJobParam:
+    description: Param to send to the download job
+    properties:
+      meta:
+        description: metadata infos to format the file
+        properties:
+          album:
+            description: the album
+            type: string
+          artist:
+            description: the artist
+            type: string
+          track:
+            description: the music track
+            type: string
+        type: object
+      url:
+        description: the youtube url to use for download
+        type: string
+    type: object
   musicresearcher.Album:
     properties:
       imageUrl:
@@ -76,6 +96,22 @@ info:
   title: Gateway Front API
   version: 0.0.1
 paths:
+  /download/url:
+    post:
+      consumes:
+      - application/json
+      description: Execute the Youtube-DL job using Cloud Task
+      parameters:
+      - description: Parameters to send to job
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/controller.downloadJobParam'
+      responses:
+        "201":
+          description: Created
+      summary: Download and save a new music file
   /music-researcher/search:
     get:
       consumes:
@@ -87,6 +123,18 @@ paths:
         name: q
         required: true
         type: string
+      - description: Genre list
+        in: query
+        items:
+          type: string
+        name: genre
+        required: true
+        type: array
+      - description: Limit result count
+        in: query
+        name: limit
+        required: true
+        type: integer
       responses:
         "200":
           description: OK

@@ -1,4 +1,4 @@
-package environments
+package config
 
 // environments names
 const (

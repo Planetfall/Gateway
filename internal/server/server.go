@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/planetfall/gateway/internal/router"
-	"github.com/planetfall/gateway/pkg/options"
 )
 
 type Server struct {
@@ -14,6 +13,14 @@ type Server struct {
 	projectID   string
 	router      *router.Router
 	gcloud      *Gcloud
+}
+
+type ServerOptions struct {
+	ServiceName string
+	ProjectID   string
+	Port        string
+	SvcConfig   router.ServicesConfig
+	Insecure    bool
 }
 
 // @title          Gateway Front API
@@ -31,20 +38,19 @@ type Server struct {
 // @accept         json
 // @produce        json
 // @schemes        https
-func NewServer(opt options.ServerOptions) (*Server, error) {
+func NewServer(opt ServerOptions) (*Server, error) {
 
-	gcloud, err := NewGcloud(opt.Env, opt.ServiceName, opt.ProjectID)
+	gcloud, err := NewGcloud(opt.ServiceName, opt.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("server.NewGcloud: %v", err)
 	}
 
 	router, err := router.NewRouter(
 		router.RouterOptions{
-
 			ProjectID:           opt.ProjectID,
 			Insecure:            opt.Insecure,
 			ErrorReportCallback: gcloud.ErrorReport,
-			ConfigMap:           opt.SvcConfigMap,
+			ConfigMap:           opt.SvcConfig,
 		},
 	)
 	if err != nil {
@@ -54,18 +60,30 @@ func NewServer(opt options.ServerOptions) (*Server, error) {
 	return &Server{
 		port:        opt.Port,
 		serviceName: opt.ServiceName,
-		router:      router,
-		gcloud:      gcloud,
 		projectID:   opt.ProjectID,
+
+		gcloud: gcloud,
+		router: router,
 	}, nil
 }
 
-func (s *Server) Start() {
+func (s *Server) Start() error {
 	log.Printf("listening on port %s", s.port)
-	s.router.Run(":" + s.port)
+	if err := s.router.Run(":" + s.port); err != nil {
+		return fmt.Errorf("router.Run: %v", err)
+	}
+
+	return nil
 }
 
 func (s *Server) Close() error {
-	// fixme
+	if err := s.gcloud.Close(); err != nil {
+		return fmt.Errorf("gcloud.Close: %v", err)
+	}
+
+	if err := s.router.Close(); err != nil {
+		return fmt.Errorf("router.Close: %v", err)
+	}
+
 	return nil
 }

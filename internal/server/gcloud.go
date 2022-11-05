@@ -5,51 +5,16 @@ import (
 	"fmt"
 	"log"
 
-	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/errorreporting"
-	env "github.com/planetfall/gateway/pkg/environments"
 )
 
-var gcloudMapping = map[string](func(string, string) (*Gcloud, error)){
-	env.Development: newGcloudDevelopment,
-	env.Production:  newGcloudProduction,
-}
-
-// Google Cloud components wich behavior relies on the environment
+// Google Cloud components
 type Gcloud struct {
 	errorReporting *errorreporting.Client
-	metadataClient *metadata.Client
 }
 
-func NewGcloud(
-	env string, serviceName string, projectID string,
-) (*Gcloud, error) {
-
-	if handler, exists := gcloudMapping[env]; exists {
-		return handler(serviceName, projectID)
-	}
-
-	return nil, fmt.Errorf("could not initialize gcloud components with env %v", env)
-}
-
-func (g *Gcloud) ErrorReport(err error) {
-	if g.errorReporting != nil {
-		g.errorReporting.Report(errorreporting.Entry{
-			Error: err,
-		})
-	}
-}
-
-func newGcloudDevelopment(_ string, _ string) (*Gcloud, error) {
-	log.Printf("GCloud components disabled in %s\n", env.Development)
-	return &Gcloud{
-		errorReporting: nil,
-		metadataClient: nil,
-	}, nil
-}
-
-func newGcloudProduction(serviceName string, projectID string) (*Gcloud, error) {
-	log.Printf("GCloud components enabled in %s, initializing...\n", env.Production)
+func NewGcloud(serviceName string, projectID string) (*Gcloud, error) {
+	log.Printf("initializing GCloud components")
 	ctx := context.Background()
 
 	errorReporting, err := errorreporting.NewClient(
@@ -65,7 +30,22 @@ func newGcloudProduction(serviceName string, projectID string) (*Gcloud, error) 
 	}
 
 	return &Gcloud{
-		metadataClient: nil,
 		errorReporting: errorReporting,
 	}, nil
+}
+
+func (g *Gcloud) Close() error {
+	if err := g.errorReporting.Close(); err != nil {
+		return fmt.Errorf("errorReporting.Close: %v")
+	}
+
+	return nil
+}
+
+func (g *Gcloud) ErrorReport(err error) {
+	if g.errorReporting != nil {
+		g.errorReporting.Report(errorreporting.Entry{
+			Error: err,
+		})
+	}
 }

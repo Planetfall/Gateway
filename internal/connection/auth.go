@@ -2,6 +2,7 @@ package connection
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -21,8 +22,8 @@ func newTokenSource(
 	// create auth context with token
 	tokenSource, err := idtoken.NewTokenSource(ctx, audience)
 	if err != nil {
-		log.Printf("idtoken.NewTokenSource: %v", err)
-		return nil, err
+		log.Println("failed authenticating, consider using insecure option")
+		return nil, fmt.Errorf("idtoken.NewTokenSource: %v", err)
 	}
 
 	return tokenSource, nil
