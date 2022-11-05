@@ -14,7 +14,7 @@ COPY . .
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 RUN swag fmt
 RUN swag init \
-  -d "./internal/server,./internal/controller/,./pkg/musicresearcher" \
+  -d "./internal/server,./internal/controller" \
   -g server.go \
   --parseInternal
 
