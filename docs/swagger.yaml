@@ -22,64 +22,6 @@ definitions:
         description: the youtube url to use for download
         type: string
     type: object
-  musicresearcher.Album:
-    properties:
-      imageUrl:
-        type: string
-      name:
-        type: string
-      releaseDate:
-        type: string
-      spotifyUrl:
-        type: string
-    type: object
-  musicresearcher.Artist:
-    properties:
-      genres:
-        items:
-          type: string
-        type: array
-      imageUrl:
-        type: string
-      name:
-        type: string
-      spotifyUrl:
-        type: string
-    type: object
-  musicresearcher.Results:
-    properties:
-      albums:
-        items:
-          $ref: '#/definitions/musicresearcher.Album'
-        type: array
-      artists:
-        items:
-          $ref: '#/definitions/musicresearcher.Artist'
-        type: array
-      tracks:
-        items:
-          $ref: '#/definitions/musicresearcher.Track'
-        type: array
-    type: object
-  musicresearcher.Track:
-    properties:
-      album:
-        $ref: '#/definitions/musicresearcher.Album'
-      artists:
-        items:
-          $ref: '#/definitions/musicresearcher.Artist'
-        type: array
-      durationMs:
-        type: integer
-      name:
-        type: string
-      popularity:
-        type: integer
-      previewUrl:
-        type: string
-      spotifyUrl:
-        type: string
-    type: object
 host: api.dadard.fr
 info:
   contact:
@@ -138,8 +80,6 @@ paths:
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/musicresearcher.Results'
       summary: Music search
 produces:
 - application/json

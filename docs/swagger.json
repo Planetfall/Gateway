@@ -86,10 +86,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/musicresearcher.Results"
-                        }
+                        "description": "OK"
                     }
                 }
             }
@@ -120,95 +117,6 @@
                 },
                 "url": {
                     "description": "the youtube url to use for download",
-                    "type": "string"
-                }
-            }
-        },
-        "musicresearcher.Album": {
-            "type": "object",
-            "properties": {
-                "imageUrl": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "releaseDate": {
-                    "type": "string"
-                },
-                "spotifyUrl": {
-                    "type": "string"
-                }
-            }
-        },
-        "musicresearcher.Artist": {
-            "type": "object",
-            "properties": {
-                "genres": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "imageUrl": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "spotifyUrl": {
-                    "type": "string"
-                }
-            }
-        },
-        "musicresearcher.Results": {
-            "type": "object",
-            "properties": {
-                "albums": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/musicresearcher.Album"
-                    }
-                },
-                "artists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/musicresearcher.Artist"
-                    }
-                },
-                "tracks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/musicresearcher.Track"
-                    }
-                }
-            }
-        },
-        "musicresearcher.Track": {
-            "type": "object",
-            "properties": {
-                "album": {
-                    "$ref": "#/definitions/musicresearcher.Album"
-                },
-                "artists": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/musicresearcher.Artist"
-                    }
-                },
-                "durationMs": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "popularity": {
-                    "type": "integer"
-                },
-                "previewUrl": {
-                    "type": "string"
-                },
-                "spotifyUrl": {
                     "type": "string"
                 }
             }

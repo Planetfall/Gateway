@@ -54,10 +54,10 @@ type searchParam struct {
 // @Description Searchs for music in Spotify API
 // @Accept      json
 // @Produces    json
-// @Param       q     query    string   true "Main user query"
-// @Param       genre query    []string true "Genre list"
-// @Param       limit query    int      true "Limit result count"
-// @Success     200   {object} pb.Results
+// @Param       q     query string   true "Main user query"
+// @Param       genre query []string true "Genre list"
+// @Param       limit query int      true "Limit result count"
+// @Success     200
 // @Router      /music-researcher/search [get]
 func (c *MusicResearcherController) Search(g *gin.Context) {
 
