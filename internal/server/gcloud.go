@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 
 	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/errorreporting"
 	env "github.com/planetfall/gateway/pkg/environments"
 )
 
-var gcloudMapping = map[string](func(string) (*Gcloud, error)){
+var gcloudMapping = map[string](func(string, string) (*Gcloud, error)){
 	env.Development: newGcloudDevelopment,
 	env.Production:  newGcloudProduction,
 }
@@ -22,9 +21,12 @@ type Gcloud struct {
 	metadataClient *metadata.Client
 }
 
-func NewGcloud(env string, serviceName string) (*Gcloud, error) {
+func NewGcloud(
+	env string, serviceName string, projectID string,
+) (*Gcloud, error) {
+
 	if handler, exists := gcloudMapping[env]; exists {
-		return handler(serviceName)
+		return handler(serviceName, projectID)
 	}
 
 	return nil, fmt.Errorf("could not initialize gcloud components with env %v", env)
@@ -38,7 +40,7 @@ func (g *Gcloud) ErrorReport(err error) {
 	}
 }
 
-func newGcloudDevelopment(_ string) (*Gcloud, error) {
+func newGcloudDevelopment(_ string, _ string) (*Gcloud, error) {
 	log.Printf("GCloud components disabled in %s\n", env.Development)
 	return &Gcloud{
 		errorReporting: nil,
@@ -46,15 +48,9 @@ func newGcloudDevelopment(_ string) (*Gcloud, error) {
 	}, nil
 }
 
-func newGcloudProduction(serviceName string) (*Gcloud, error) {
+func newGcloudProduction(serviceName string, projectID string) (*Gcloud, error) {
 	log.Printf("GCloud components enabled in %s, initializing...\n", env.Production)
 	ctx := context.Background()
-
-	metadataClient := metadata.NewClient(&http.Client{})
-	projectID, err := metadataClient.ProjectID()
-	if err != nil {
-		return nil, fmt.Errorf("metadataClient.ProjectID: %v", err)
-	}
 
 	errorReporting, err := errorreporting.NewClient(
 		ctx, projectID,
@@ -69,7 +65,7 @@ func newGcloudProduction(serviceName string) (*Gcloud, error) {
 	}
 
 	return &Gcloud{
-		metadataClient: metadataClient,
+		metadataClient: nil,
 		errorReporting: errorReporting,
 	}, nil
 }

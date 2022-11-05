@@ -19,6 +19,10 @@ type MusicResearcherController struct {
 func NewMusicResearcherController(
 	opt ControllerOptions) (*MusicResearcherController, error) {
 
+	ctrl := Controller{
+		opt.ErrorReportCallback,
+	}
+
 	conn, err := connection.NewConnection(opt.Insecure, opt.Host, opt.Audience)
 	if err != nil {
 		return nil, fmt.Errorf("connection.NewConnection: %v", err)
@@ -27,7 +31,7 @@ func NewMusicResearcherController(
 	client := pb.NewMusicResearcherClient(conn.GrpcConn())
 
 	return &MusicResearcherController{
-		Controller{opt.ErrorReportCallback},
+		ctrl,
 		conn,
 		client,
 	}, nil

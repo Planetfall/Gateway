@@ -11,6 +11,7 @@ import (
 type Server struct {
 	port        string
 	serviceName string
+	projectID   string
 	router      *router.Router
 	gcloud      *Gcloud
 }
@@ -32,13 +33,19 @@ type Server struct {
 // @schemes        https
 func NewServer(opt options.ServerOptions) (*Server, error) {
 
-	gcloud, err := NewGcloud(opt.Env, opt.ServiceName)
+	gcloud, err := NewGcloud(opt.Env, opt.ServiceName, opt.ProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("server.NewGcloud: %v", err)
 	}
 
 	router, err := router.NewRouter(
-		opt.SvcConfigMap, gcloud.ErrorReport, opt.Insecure,
+		router.RouterOptions{
+
+			ProjectID:           opt.ProjectID,
+			Insecure:            opt.Insecure,
+			ErrorReportCallback: gcloud.ErrorReport,
+			ConfigMap:           opt.SvcConfigMap,
+		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("router.NewRouter: %v", err)
@@ -49,6 +56,7 @@ func NewServer(opt options.ServerOptions) (*Server, error) {
 		serviceName: opt.ServiceName,
 		router:      router,
 		gcloud:      gcloud,
+		projectID:   opt.ProjectID,
 	}, nil
 }
 

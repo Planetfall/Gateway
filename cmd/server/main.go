@@ -36,26 +36,32 @@ func setConfig() {
 	log.Printf("loaded config file %s...\n", configFile)
 }
 
-func main() {
-	setConfig()
+func getServiceConfigMap() (*config.ServiceConfigMap, error) {
 	var serviceConfigMap config.ServiceConfigMap
 	err := viper.UnmarshalKey("services", &serviceConfigMap)
 	if err != nil {
+		return nil, fmt.Errorf("viper.UnmarshalKey: %v", err)
 		log.Fatalf("failed to load connections config: %v\n", err)
 	}
-	var connNameList []string
-	for connName, _ := range serviceConfigMap {
-		connNameList = append(connNameList, connName)
+
+	return &serviceConfigMap, nil
+}
+
+func main() {
+	setConfig()
+	serviceConfigMap, err := getServiceConfigMap()
+	if err != nil {
+		log.Fatalf("failed to get connection list from config: %v", err)
 	}
-	log.Printf("loaded connections %v\n", connNameList)
 
 	server, err := server.NewServer(
 		options.ServerOptions{
 			Env:          viper.GetString("env"),
 			ServiceName:  viper.GetString("K_SERVICE"),
+			ProjectID:    viper.GetString("project-id"),
 			Port:         viper.GetString("PORT"),
 			Insecure:     viper.GetBool("insecure"),
-			SvcConfigMap: serviceConfigMap,
+			SvcConfigMap: *serviceConfigMap,
 		},
 	)
 	if err != nil {
