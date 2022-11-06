@@ -5,7 +5,7 @@ steps:
   args: 
     - 'build'
     - '-t'
-    - 'europe-west2-docker.pkg.dev/$PROJECT_ID/repo-docker/front:$COMMIT_SHA'
+    - ${_IMAGE_NAME}
     - '-f'
     - './build/Dockerfile'
     - '.'
@@ -14,19 +14,23 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args:
     - 'push'
-    - 'europe-west2-docker.pkg.dev/$PROJECT_ID/repo-docker/front:$COMMIT_SHA'
+    - ${_IMAGE_NAME}
     
 # Deploy container image to Cloud Run
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: gcloud
+- name: 'gcr.io/cloud-builders/gcloud'
   args:
     - 'run'
     - 'deploy'
-    - 'front'
+    - ${_SERVICE_NAME}
     - '--image'
-    - 'europe-west2-docker.pkg.dev/$PROJECT_ID/repo-docker/front:$COMMIT_SHA'
+    - ${_IMAGE_NAME}
     - '--region'
     - 'europe-west1'
 
-images:
-- 'europe-west2-docker.pkg.dev/$PROJECT_ID/repo-docker/front:$COMMIT_SHA'
+substitutions:
+  _SERVICE_NAME: 'front'
+  _IMAGE_NAME: 'europe-west2-docker.pkg.dev/${PROJECT_ID}/repo-docker/gateway:${COMMIT_SHA}'
+
+options:
+  dynamic_substitutions: true
+
