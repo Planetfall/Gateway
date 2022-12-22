@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-const defaultTimeout = 10 * time.Second
+const DefaultTimeout = 10 * time.Second
 
 // base controller type providing utils
 type Controller struct {
-	errorReportCallback func(err error)
+	ErrorReportCallback func(err error)
 }
 
 type ControllerOptions struct {
@@ -19,7 +19,7 @@ type ControllerOptions struct {
 	ErrorReportCallback func(err error)
 }
 
-func (c *Controller) getContext(
+func (c *Controller) GetContext(
 	timeout time.Duration) (context.Context, context.CancelFunc) {
 
 	return context.WithTimeout(context.Background(), timeout)

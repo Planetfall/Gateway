@@ -1,4 +1,4 @@
-package controller
+package search
 
 import (
 	"fmt"
@@ -6,20 +6,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/planetfall/gateway/internal/connection"
+	"github.com/planetfall/gateway/internal/controller"
 	pb "github.com/planetfall/genproto/pkg/musicresearcher/v1"
 )
 
 type MusicResearcherController struct {
-	Controller
+	controller.Controller
 
 	conn   *connection.Connection
 	client pb.MusicResearcherClient
 }
 
 func NewMusicResearcherController(
-	opt ControllerOptions) (*MusicResearcherController, error) {
+	opt controller.ControllerOptions) (*MusicResearcherController, error) {
 
-	ctrl := Controller{
+	ctrl := controller.Controller{
 		opt.ErrorReportCallback,
 	}
 
@@ -64,16 +65,16 @@ func (c *MusicResearcherController) Search(g *gin.Context) {
 	// params
 	var sp searchParam
 	if err := g.ShouldBind(&sp); err != nil {
-		c.badRequest(fmt.Errorf("gin.ShouldBind: %v", err), g)
+		c.BadRequest(fmt.Errorf("gin.ShouldBind: %v", err), g)
 		return
 	}
 
-	ctx, cancel := c.getContext(defaultTimeout)
+	ctx, cancel := c.GetContext(controller.DefaultTimeout)
 	defer cancel()
 
 	ctx, err := c.conn.AuthenticateContext(ctx)
 	if err != nil {
-		c.internalError(fmt.Errorf("connection.AuthenticateContext: %v", err), g)
+		c.InternalError(fmt.Errorf("connection.AuthenticateContext: %v", err), g)
 		return
 	}
 
@@ -86,7 +87,7 @@ func (c *MusicResearcherController) Search(g *gin.Context) {
 		},
 	)
 	if err != nil {
-		c.internalError(fmt.Errorf("musicResearcherClient.Search: %v", err), g)
+		c.InternalError(fmt.Errorf("musicResearcherClient.Search: %v", err), g)
 		return
 	}
 

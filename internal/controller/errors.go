@@ -23,15 +23,15 @@ func (c *Controller) formatError(
 	g.JSON(status, msg)
 
 	// use the callback provided by the Server
-	c.errorReportCallback(err)
+	c.ErrorReportCallback(err)
 }
 
-func (c *Controller) badRequest(err error, g *gin.Context) {
+func (c *Controller) BadRequest(err error, g *gin.Context) {
 	c.formatError(err, g,
 		http.StatusBadRequest, "Wrong parameters supplied")
 }
 
-func (c *Controller) internalError(err error, g *gin.Context) {
+func (c *Controller) InternalError(err error, g *gin.Context) {
 	c.formatError(err, g,
 		http.StatusInternalServerError, "Something went wrong on my side")
 }

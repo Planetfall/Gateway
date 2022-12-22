@@ -9,9 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/planetfall/gateway/docs"
 	c "github.com/planetfall/gateway/internal/controller"
+	"github.com/planetfall/gateway/internal/controller/download"
+	"github.com/planetfall/gateway/internal/controller/search"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -19,8 +22,8 @@ import (
 type Router struct {
 	engine *gin.Engine
 
-	musicResearcherController *c.MusicResearcherController
-	downloadController        *c.DownloadController
+	musicResearcherController *search.MusicResearcherController
+	downloadController        *download.DownloadController
 }
 
 type RouterOptions struct {
@@ -39,6 +42,11 @@ const youtubeDlJobName = "youtube-dl-job"
 func NewRouter(opt RouterOptions) (*Router, error) {
 	g := gin.Default()
 
+	// cors
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	g.Use(cors.New(config))
+
 	//music researcher
 	mr, err := setupMusicResearcher(g, opt)
 	if err != nil {
@@ -53,6 +61,8 @@ func NewRouter(opt RouterOptions) (*Router, error) {
 
 	g.GET("/swagger-ui/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// g.Use(corsMiddleware())
+
 	return &Router{
 		engine: g,
 
@@ -62,7 +72,7 @@ func NewRouter(opt RouterOptions) (*Router, error) {
 }
 
 func setupMusicResearcher(
-	g *gin.Engine, opt RouterOptions) (*c.MusicResearcherController, error) {
+	g *gin.Engine, opt RouterOptions) (*search.MusicResearcherController, error) {
 
 	// music researcher
 	conf, exists := opt.ConfigMap[musicResearcherName]
@@ -72,7 +82,7 @@ func setupMusicResearcher(
 
 	log.Printf("setting up %s controller\n", musicResearcherName)
 
-	mr, err := c.NewMusicResearcherController(
+	mr, err := search.NewMusicResearcherController(
 		c.ControllerOptions{
 			Host:                conf.Host,
 			Audience:            conf.Audience,
@@ -94,24 +104,25 @@ func setupMusicResearcher(
 }
 
 func setupDownload(
-	g *gin.Engine, opt RouterOptions) (*c.DownloadController, error) {
+	g *gin.Engine, opt RouterOptions) (*download.DownloadController, error) {
 
 	conf, exists := opt.ConfigMap[youtubeDlJobName]
 	if !exists {
 		return nil, nil
 	}
 	log.Printf("setting up %s controller\n", youtubeDlJobName)
-	yt, err := c.NewDownloadController(
-		c.DownloadControllerOptions{
+	yt, err := download.NewDownloadController(
+		download.DownloadControllerOptions{
 
 			ControllerOptions: c.ControllerOptions{
 				Host:                conf.Host,
 				ErrorReportCallback: opt.ErrorReportCallback,
 			},
 
-			ProjectID:  opt.ProjectID,
-			LocationID: conf.LocationID,
-			QueueID:    conf.QueueID,
+			ProjectID:      opt.ProjectID,
+			LocationID:     conf.LocationID,
+			QueueID:        conf.QueueID,
+			SubscriptionID: conf.SubscriptionID,
 		},
 	)
 	if err != nil {
@@ -120,7 +131,7 @@ func setupDownload(
 
 	downloadGroup := g.Group("/download")
 	{
-		downloadGroup.POST("/url", yt.DownloadJob)
+		downloadGroup.GET("/url", yt.DownloadJob)
 	}
 
 	return yt, nil

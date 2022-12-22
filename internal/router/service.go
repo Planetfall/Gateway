@@ -6,6 +6,7 @@ type ServiceConfig struct {
 	Host     string
 	Audience string
 
-	QueueID    string
-	LocationID string
+	QueueID        string
+	LocationID     string
+	SubscriptionID string
 }
