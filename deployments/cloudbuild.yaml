@@ -28,7 +28,7 @@ steps:
     - 'europe-west1'
 
 substitutions:
-  _SERVICE_NAME: 'front'
+  _SERVICE_NAME: 'gateway'
   _IMAGE_NAME: 'europe-west2-docker.pkg.dev/${PROJECT_ID}/repo-docker/gateway:${COMMIT_SHA}'
 
 options:
