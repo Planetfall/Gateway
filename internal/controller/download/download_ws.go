@@ -106,13 +106,13 @@ func (c *DownloadController) downloadJobWs(ws *websocket.Conn) error {
 		urlDownloadParam: dParam,
 		JobKey:           string(jKey),
 	}
-	createdTask, err := c.createTask(payload)
+	_, err = c.createTask(payload)
 	if err != nil {
 		return fmt.Errorf("download.createTask: %v", err)
 	}
 
 	// send back the created task
-	if err := ws.WriteJSON(&createdTask); err != nil {
+	if err := ws.WriteJSON(&payload); err != nil {
 		return fmt.Errorf("websocket.WriteJSON: %v", err)
 	}
 
