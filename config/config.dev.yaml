@@ -9,4 +9,7 @@ services:
     location_id: europe-west1
     queue_id: youtube-dl-queue
     subscription_id: youtube-dl-sub
+    websocket_origins:
+      - http://localhost:3000
+      - https://dadard.fr
 

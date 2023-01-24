@@ -19,6 +19,8 @@ type DownloadController struct {
 	taskClient *cloudtasks.Client
 
 	sub *subscriber.Subscriber
+
+	websocketOrigins []string
 }
 
 type DownloadControllerOptions struct {
@@ -30,6 +32,8 @@ type DownloadControllerOptions struct {
 	QueueID    string
 
 	SubscriptionID string
+
+	WebsocketOrigins []string
 }
 
 func NewDownloadController(opt DownloadControllerOptions) (*DownloadController, error) {
@@ -73,6 +77,8 @@ func NewDownloadController(opt DownloadControllerOptions) (*DownloadController, 
 		taskClient,
 
 		sub,
+
+		opt.WebsocketOrigins,
 	}, nil
 }
 

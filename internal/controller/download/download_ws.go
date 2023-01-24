@@ -3,6 +3,7 @@ package download
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -36,6 +37,21 @@ func (c *DownloadController) DownloadJob(g *gin.Context) {
 	upgrader := websocket.Upgrader{
 		WriteBufferSize: 1024,
 		ReadBufferSize:  1024,
+		CheckOrigin: func(r *http.Request) bool {
+			origin := r.Header.Get("Origin")
+			// no origin to verify (aka, not called by javascript)
+			if origin == "" {
+				return true
+			}
+
+			for _, authorizedOrigin := range c.websocketOrigins {
+				if authorizedOrigin == origin {
+					return true
+				}
+			}
+			return false
+
+		},
 	}
 
 	ws, err := upgrader.Upgrade(g.Writer, g.Request, nil)

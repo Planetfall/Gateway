@@ -119,10 +119,11 @@ func setupDownload(
 				ErrorReportCallback: opt.ErrorReportCallback,
 			},
 
-			ProjectID:      opt.ProjectID,
-			LocationID:     conf.LocationID,
-			QueueID:        conf.QueueID,
-			SubscriptionID: conf.SubscriptionID,
+			ProjectID:        opt.ProjectID,
+			LocationID:       conf.LocationID,
+			QueueID:          conf.QueueID,
+			SubscriptionID:   conf.SubscriptionID,
+			WebsocketOrigins: conf.WebsocketOrigins,
 		},
 	)
 	if err != nil {

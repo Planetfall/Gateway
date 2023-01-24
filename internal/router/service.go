@@ -9,4 +9,6 @@ type ServiceConfig struct {
 	QueueID        string
 	LocationID     string
 	SubscriptionID string
+
+	WebsocketOrigins []string
 }

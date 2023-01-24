@@ -13,4 +13,7 @@ type ServiceConfig struct {
 
 	// pubsub
 	SubscriptionID string `mapstructure:"subscription_id"`
+
+	// websockets
+	WebsocketOrigins []string `mapstructure:"websocket_origins"`
 }
