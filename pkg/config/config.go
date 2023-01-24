@@ -29,7 +29,6 @@ const (
 // - insecure		(commandline):	boolean, use to interact with others services
 // without authentication, DO NOT USE IN PRODUCTION
 // - config			(commandline):	set the config file path
-// (default: ./config/config.production.yaml)
 
 // - configfile									set project ID and services connections
 func ReadConfig() {
