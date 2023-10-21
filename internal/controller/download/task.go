@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
+	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
 )
 
 func (c *DownloadController) createTask(
-	dPayload urlDownloadPayload) (*taskspb.Task, error) {
+	dPayload taskDownloadPayload) (*taskspb.Task, error) {
 
 	body, err := json.Marshal(&dPayload)
 	if err != nil {
@@ -19,7 +19,7 @@ func (c *DownloadController) createTask(
 	req := c.newCreateTaskRequest(body)
 
 	ctx := context.Background()
-	createdTask, err := c.taskClient.CreateTask(ctx, req)
+	createdTask, err := c.tasks.CreateTask(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
 	}
@@ -35,7 +35,7 @@ func (c *DownloadController) newCreateTaskRequest(body []byte) *taskspb.CreateTa
 			MessageType: &taskspb.Task_HttpRequest{
 				HttpRequest: &taskspb.HttpRequest{
 					HttpMethod: taskspb.HttpMethod_POST,
-					Url:        c.jobUrl,
+					Url:        c.Target,
 					Body:       body,
 					Headers: map[string]string{
 						"Content-Type": "application/json",

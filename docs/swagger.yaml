@@ -2,8 +2,7 @@ basePath: /
 consumes:
 - application/json
 definitions:
-  controller.downloadJobParam:
-    description: Param to send to the download job
+  download.downloadPayload:
     properties:
       meta:
         description: metadata infos to format the file
@@ -39,7 +38,7 @@ info:
   version: 0.0.1
 paths:
   /download/url:
-    post:
+    get:
       consumes:
       - application/json
       description: Execute the Youtube-DL job using Cloud Task
@@ -49,11 +48,20 @@ paths:
         name: payload
         required: true
         schema:
-          $ref: '#/definitions/controller.downloadJobParam'
+          $ref: '#/definitions/download.downloadPayload'
       responses:
         "201":
           description: Created
       summary: Download and save a new music file
+  /music-researcher/genres:
+    get:
+      consumes:
+      - application/json
+      description: List available genre in Spotify API
+      responses:
+        "200":
+          description: OK
+      summary: List genres
   /music-researcher/search:
     get:
       consumes:
@@ -65,7 +73,8 @@ paths:
         name: q
         required: true
         type: string
-      - description: Genre list
+      - collectionFormat: csv
+        description: Genre list
         in: query
         items:
           type: string

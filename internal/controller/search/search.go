@@ -1,95 +1,69 @@
+// Package search contains the music researcher controller.
+// It aims to interact using gRPC with the music researcher service.
 package search
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/planetfall/gateway/internal/connection"
+	"github.com/planetfall/gateway/internal/connection/grpc"
 	"github.com/planetfall/gateway/internal/controller"
 	pb "github.com/planetfall/genproto/pkg/musicresearcher/v1"
 )
 
-type MusicResearcherController struct {
+// SearchController is used to interact with the music researcher service.
+type SearchController struct {
+	// Reference to the base controller type
 	controller.Controller
 
-	conn   *connection.Connection
+	// The connection to setup the client and authenticate the request context
+	conn *grpc.Connection
+
+	// The generate protobuf client for the
+	// [github.com/planetfall/musicresearcher] service
 	client pb.MusicResearcherClient
 }
 
-func NewMusicResearcherController(
-	opt controller.ControllerOptions) (*MusicResearcherController, error) {
+// SearchControllerOptions holds the parameters for the ResearcherController
+// builder
+type SearchControllerOptions struct {
+	// The [controller] builder parameters
+	ControllerOptions controller.ControllerOptions
 
-	ctrl := controller.Controller{
-		opt.ErrorReportCallback,
-	}
+	// Insecure for [grpc] connection builder parameters
+	Insecure bool
+}
 
-	conn, err := connection.NewConnection(opt.Insecure, opt.Host, opt.Audience)
+// NewSearchController buids a new MusicResearcher controller.
+// It setup the GRPC connection and the protobuf client.
+func NewSearchController(
+	opt SearchControllerOptions) (*SearchController, error) {
+
+	// initialize the base type
+	ctrl := controller.NewController(opt.ControllerOptions)
+
+	// setup the connection
+	conn, err := grpc.NewConnection(grpc.ConnectionOptions{
+		Target:   opt.ControllerOptions.Target,
+		Insecure: opt.Insecure,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("connection.NewConnection: %v", err)
 	}
 
+	// setup the client
 	client := pb.NewMusicResearcherClient(conn.GrpcConn())
 
-	return &MusicResearcherController{
-		ctrl,
-		conn,
-		client,
+	return &SearchController{
+		Controller: ctrl,
+		client:     client,
+		conn:       conn,
 	}, nil
 }
 
-func (c *MusicResearcherController) Close() error {
+// Close terminates the inner GRPC connection
+func (c *SearchController) Close() error {
 	if err := c.conn.Close(); err != nil {
 		return fmt.Errorf("connection.Close: %v", err)
 	}
 	return nil
-}
-
-type searchParam struct {
-	Query     string   `form:"q"`
-	GenreList []string `form:"genre"`
-	Limit     int      `form:"limit"`
-}
-
-// @Summary     Music search
-// @Description Searchs for music in Spotify API
-// @Accept      json
-// @Produces    json
-// @Param       q     query string   true "Main user query"
-// @Param       genre query []string true "Genre list"
-// @Param       limit query int      true "Limit result count"
-// @Success     200
-// @Router      /music-researcher/search [get]
-func (c *MusicResearcherController) Search(g *gin.Context) {
-
-	// params
-	var sp searchParam
-	if err := g.ShouldBind(&sp); err != nil {
-		c.BadRequest(fmt.Errorf("gin.ShouldBind: %v", err), g)
-		return
-	}
-
-	ctx, cancel := c.GetContext(controller.DefaultTimeout)
-	defer cancel()
-
-	ctx, err := c.conn.AuthenticateContext(ctx)
-	if err != nil {
-		c.InternalError(fmt.Errorf("connection.AuthenticateContext: %v", err), g)
-		return
-	}
-
-	results, err := c.client.Search(
-		ctx,
-		&pb.Parameters{
-			Query:        sp.Query,
-			GenreFilters: sp.GenreList,
-			Limit:        int32(sp.Limit),
-		},
-	)
-	if err != nil {
-		c.InternalError(fmt.Errorf("musicResearcherClient.Search: %v", err), g)
-		return
-	}
-
-	g.JSON(http.StatusOK, &results)
 }

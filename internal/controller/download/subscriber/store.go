@@ -2,7 +2,6 @@ package subscriber
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"crypto/sha256"
@@ -10,7 +9,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// jobKey holds the key of the job started in a websocket
 type jobKey string
+
+// websocketStore holds the current active websockets. For each, it also stores
+// the current job keys started in those websockets.
 type websocketStore map[*websocket.Conn][]jobKey
 
 // Generate a new job key from a websocket, using the client addr and
@@ -26,10 +29,11 @@ func (s *Subscriber) newJobKey(ws *websocket.Conn) jobKey {
 	return jobKey(key[:8])
 }
 
-// Returns the websocket which has the jKeyStr associate
-func (s *Subscriber) getWebsocketFromKey(jKeyStr string) (*websocket.Conn, error) {
+// getWebsocketFromKey provides the websocket associated with the provided job
+// key
+func (s *Subscriber) getWebsocketFromKey(jobKeyStr string) (*websocket.Conn, error) {
 
-	jKeyFilter := jobKey(jKeyStr)
+	jKeyFilter := jobKey(jobKeyStr)
 	// loop over ws
 	for ws, jKeys := range s.wsStore {
 
@@ -41,11 +45,11 @@ func (s *Subscriber) getWebsocketFromKey(jKeyStr string) (*websocket.Conn, error
 		}
 	}
 
-	return nil, fmt.Errorf("key %s not found", jKeyStr)
+	return nil, fmt.Errorf("job key %s not found", jobKeyStr)
 }
 
-// Add a new websocket to the store and initialize its associate
-// job keys slice
+// RegisterWebsocket adds a new websocket in the store.
+// It initialize its job key slice.
 func (s *Subscriber) RegisterWebsocket(ws *websocket.Conn) error {
 
 	if _, exists := s.wsStore[ws]; exists {
@@ -55,12 +59,10 @@ func (s *Subscriber) RegisterWebsocket(ws *websocket.Conn) error {
 	// initialize with empty array
 	s.wsStore[ws] = make([]jobKey, 0)
 
-	log.Println(s.wsStore)
-
 	return nil
 }
 
-// Add a new job key to an already registered websocket
+// AddNewJob adds a new job key to a registered websocket.
 func (s *Subscriber) AddNewJob(ws *websocket.Conn) (jobKey, error) {
 
 	if _, exists := s.wsStore[ws]; !exists {
@@ -73,8 +75,8 @@ func (s *Subscriber) AddNewJob(ws *websocket.Conn) (jobKey, error) {
 	return newJKey, nil
 }
 
-// Remove a registered websocket from the store and remove all
-// associate job keys
+// UnregisterWebsocket removes a registered websocket from the store and removes
+// all its job keys
 func (s *Subscriber) UnregisterWebsocket(ws *websocket.Conn) error {
 
 	if _, exists := s.wsStore[ws]; !exists {
@@ -82,7 +84,6 @@ func (s *Subscriber) UnregisterWebsocket(ws *websocket.Conn) error {
 	}
 
 	delete(s.wsStore, ws)
-	log.Println(s.wsStore)
 
 	return nil
 }

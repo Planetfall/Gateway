@@ -1,46 +1,39 @@
 package runserver
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/planetfall/gateway/internal/router"
-	"github.com/planetfall/gateway/internal/server"
-	"github.com/planetfall/gateway/pkg/config"
+	"github.com/spf13/viper"
 )
 
-type RunServerOptions struct {
-	ServiceName string
-	ProjectID   string
-	Port        string
-	SvcConfig   config.ServiceConfigMap
-	Insecure    bool
+func RunServer() {
+	log.SetPrefix("[RUNSERVER] ")
 
-	// unused
-	Environment string
-}
-
-func RunServer(opt RunServerOptions) error {
-	services := router.ServicesConfig{}
-	for service, conf := range opt.SvcConfig {
-		services[service] = router.ServiceConfig(conf)
-	}
-
-	s, err := server.NewServer(
-		server.ServerOptions{
-			ServiceName: opt.ServiceName,
-			ProjectID:   opt.ProjectID,
-			Port:        opt.Port,
-			SvcConfig:   services,
-			Insecure:    opt.Insecure,
-		},
-	)
+	// config
+	log.Printf("setting up the config")
+	cfg, err := getConfig()
 	if err != nil {
-		return fmt.Errorf("server.NewServer: %v", err)
+		log.Fatalf("getConfig: %v", err)
 	}
 
-	if err := s.Start(); err != nil {
-		return fmt.Errorf("server.Start: %v", err)
+	// server
+	log.Printf("setting up the server")
+	srv, err := getServer(cfg)
+	if err != nil {
+		log.Fatalf("getServer: %v", err)
 	}
 
-	return nil
+	// service
+	log.Printf("setting up the service")
+	svc, err := getService(srv)
+	if err != nil {
+		log.Fatalf("getService: %v", err)
+	}
+
+	port := viper.GetString(portFlag)
+	if err := svc.Start(port); err != nil {
+		log.Fatalf("svc.Start: %v", err)
+	}
+
+	log.Println("service stopped")
 }

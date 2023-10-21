@@ -27,7 +27,7 @@
     "basePath": "/",
     "paths": {
         "/download/url": {
-            "post": {
+            "get": {
                 "description": "Execute the Youtube-DL job using Cloud Task",
                 "consumes": [
                     "application/json"
@@ -40,13 +40,27 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.downloadJobParam"
+                            "$ref": "#/definitions/download.downloadPayload"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
                         "description": "Created"
+                    }
+                }
+            }
+        },
+        "/music-researcher/genres": {
+            "get": {
+                "description": "List available genre in Spotify API",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "List genres",
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -71,6 +85,7 @@
                         "items": {
                             "type": "string"
                         },
+                        "collectionFormat": "csv",
                         "description": "Genre list",
                         "name": "genre",
                         "in": "query",
@@ -93,8 +108,7 @@
         }
     },
     "definitions": {
-        "controller.downloadJobParam": {
-            "description": "Param to send to the download job",
+        "download.downloadPayload": {
             "type": "object",
             "properties": {
                 "meta": {

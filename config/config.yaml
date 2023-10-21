@@ -1,14 +1,11 @@
-project-id: echo-slam-planetfall
-services:
-  music-researcher:
-    host: music-researcher-twecq3u42q-ew.a.run.app:443
-    audience: https://music-researcher-twecq3u42q-ew.a.run.ap
+music-researcher:
+  target: music-researcher-twecq3u42q-ew.a.run.app:443
 
-  youtube-dl-job:
-    host: https://youtube-dl-job-twecq3u42q-ew.a.run.app
-    location_id: europe-west1
-    queue_id: youtube-dl-queue
-    subscription_id: youtube-dl-sub
-    websocket_origins:
-      - http://localhost:3000
-      - https://dadard.fr
+downloader:
+  target: https://youtube-dl-job-twecq3u42q-ew.a.run.app/download/url
+  location: europe-west1
+  queue: youtube-dl-queue
+  subscription: youtube-dl-sub
+  origins:
+    - http://localhost:3000
+    - https://dadard.fr

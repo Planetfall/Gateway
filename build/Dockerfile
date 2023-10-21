@@ -22,6 +22,4 @@ RUN swag init \
 RUN apk add git
 RUN go build -v -o /usr/local/bin/app ./cmd/server
 
-RUN echo "building for ${APP_ENV}"
-
-CMD app --env ${APP_ENV}
+CMD app
