@@ -19,7 +19,7 @@ type searchParameters struct {
 // dedicated service.
 //
 //	@Summary		Music search
-//	@Description	Searchs for music in Spotify API
+//	@Description	Searches for music in Spotify API
 //	@Accept			json
 //	@Produces		json
 //	@Param			q		query	string		true	"Main user query"

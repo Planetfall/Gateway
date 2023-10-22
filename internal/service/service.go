@@ -46,21 +46,21 @@ type ServiceOptions struct {
 	Insecure bool
 }
 
-//	@title			Gateway Front API
-//	@version		0.0.1
-//	@description	This application provides a front gateway allowing you
-//	@description	to interact with multiple GRPC microservices hosted
-//	@description	in Google Cloud
-//	@termsOfService	No terms
-//	@contact.name	Support
-//	@contact.email	florian.charpentier67@gmail.com
-//	@license.name	MIT
-//	@license.url	http://opensource.org/licenses/MIT
-//	@host			api.dadard.fr
-//	@BasePath		/
-//	@accept			json
-//	@produce		json
-//	@schemes		https
+// @title			Gateway Front API
+// @version		0.0.1
+// @description	This application provides a front gateway allowing you
+// @description	to interact with multiple GRPC microservices hosted
+// @description	in Google Cloud
+// @termsOfService	No terms
+// @contact.name	Support
+// @contact.email	florian.charpentier67@gmail.com
+// @license.name	MIT
+// @license.url	http://opensource.org/licenses/MIT
+// @host			api.dadard.fr
+// @BasePath		/
+// @accept			json
+// @produce		json
+// @schemes		https
 func NewService(opt ServiceOptions) (*Service, error) {
 	g := gin.Default()
 
@@ -115,7 +115,7 @@ func NewService(opt ServiceOptions) (*Service, error) {
 }
 
 // Start runs the HTTP server.
-// It runs until the Interupt signal are received. Then, the HTTP server is
+// It runs until the Interrupt signal are received. Then, the HTTP server is
 // gracefully shutdown. The service.Close call is deferred.
 func (s *Service) Start(port string) error {
 	addr := fmt.Sprintf(":%s", port)
