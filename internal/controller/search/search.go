@@ -16,7 +16,7 @@ type SearchController struct {
 	controller.Controller
 
 	// The connection to setup the client and authenticate the request context
-	conn *grpc.Connection
+	conn grpc.Connection
 
 	// The generate protobuf client for the
 	// [github.com/planetfall/musicresearcher] service
@@ -31,6 +31,34 @@ type SearchControllerOptions struct {
 
 	// Insecure for [grpc] connection builder parameters
 	Insecure bool
+
+	// Protobuf custom client (optional)
+	Client Client
+
+	// GRPC custom connection (option)
+	Conn grpc.Connection
+}
+
+func getConn(opt SearchControllerOptions) (grpc.Connection, error) {
+
+	if opt.Conn != nil {
+		return opt.Conn, nil
+	}
+
+	return grpc.NewConnection(grpc.ConnectionOptions{
+		Target:   opt.ControllerOptions.Target,
+		Insecure: opt.Insecure,
+	})
+}
+
+func getClient(opt SearchControllerOptions,
+	conn grpc.Connection) Client {
+
+	if opt.Client != nil {
+		return opt.Client
+	}
+
+	return pb.NewMusicResearcherClient(conn.GrpcConn())
 }
 
 // NewSearchController buids a new MusicResearcher controller.
@@ -42,16 +70,13 @@ func NewSearchController(
 	ctrl := controller.NewController(opt.ControllerOptions)
 
 	// setup the connection
-	conn, err := grpc.NewConnection(grpc.ConnectionOptions{
-		Target:   opt.ControllerOptions.Target,
-		Insecure: opt.Insecure,
-	})
+	conn, err := getConn(opt)
 	if err != nil {
 		return nil, fmt.Errorf("connection.NewConnection: %v", err)
 	}
 
 	// setup the client
-	client := pb.NewMusicResearcherClient(conn.GrpcConn())
+	client := getClient(opt, conn)
 
 	return &SearchController{
 		Controller: ctrl,

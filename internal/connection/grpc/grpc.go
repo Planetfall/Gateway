@@ -19,22 +19,28 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Connection is an helper struct, that holds the actual grpc.ClientConn
+// Connection is an helper, that holds the actual grpc.ClientConn
 // connection.
 // It encapsulate the authentication, and the setup of the transport
 // credentials.
-type Connection struct {
+type Connection interface {
+	GrpcConn() *grpc.ClientConn
+	Close() error
+	AuthenticateContext(context.Context) (context.Context, error)
+}
+
+type connectionImpl struct {
 	grpcConn    *grpc.ClientConn
 	tokenSource oauth2.TokenSource
 }
 
 // GrpcConn allows read access on the grpc.ClientConn property.
-func (c *Connection) GrpcConn() *grpc.ClientConn {
+func (c *connectionImpl) GrpcConn() *grpc.ClientConn {
 	return c.grpcConn
 }
 
 // Close terminates the grpc.ClientConn connection
-func (c *Connection) Close() error {
+func (c *connectionImpl) Close() error {
 	return c.grpcConn.Close()
 }
 
@@ -58,7 +64,7 @@ type ConnectionOptions struct {
 //     use TLS.
 //
 // The host is used to setup the grpc.ClientConn.
-func NewConnection(opt ConnectionOptions) (*Connection, error) {
+func NewConnection(opt ConnectionOptions) (Connection, error) {
 	creds, err := newCredentials(opt.Insecure)
 	if err != nil {
 		return nil, fmt.Errorf("getCredentials: %v", err)
@@ -81,7 +87,7 @@ func NewConnection(opt ConnectionOptions) (*Connection, error) {
 		}
 	}
 
-	return &Connection{
+	return &connectionImpl{
 		grpcConn,
 		tokenSource,
 	}, nil

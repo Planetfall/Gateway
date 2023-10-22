@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func getServer(cfg *config.Config) (*server.Server, error) {
+func getServer(cfg config.Config) (*server.Server, error) {
 
 	serviceName := viper.GetString(serviceFlag)
 	s, err := server.NewServer(cfg, serviceName)

@@ -13,7 +13,7 @@ import (
 // This is reused from the [Cloud Run] documentation
 //
 // [Cloud Run]: https://cloud.google.com/run/docs/triggering/grpc#request-auth
-func (c *Connection) AuthenticateContext(
+func (c *connectionImpl) AuthenticateContext(
 	ctx context.Context) (context.Context, error) {
 
 	// if tokenSource unset, not able to provide a token

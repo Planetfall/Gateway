@@ -15,7 +15,7 @@ const (
 	insecureFlag = "insecure"
 )
 
-func getConfig() (*config.Config, error) {
+func getConfig() (config.Config, error) {
 	entries := []config.Entry{
 		{
 			Flag:         portFlag,
