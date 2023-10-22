@@ -67,8 +67,15 @@ func (c *DownloadController) Download(g *gin.Context) {
 	}
 
 	// remove from stored sockets when connection ended
-	defer c.sub.UnregisterWebsocket(ws)
-	defer ws.Close()
+	defer func() {
+		if err := c.sub.UnregisterWebsocket(ws); err != nil {
+			c.Logger.Printf("sub.UnregisterWebsocket: %v", err)
+		}
+
+		if err := ws.Close(); err != nil {
+			c.Logger.Printf("ws.Close: %v", err)
+		}
+	}()
 
 	for {
 		// main loop
