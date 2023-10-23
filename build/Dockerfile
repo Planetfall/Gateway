@@ -1,6 +1,5 @@
-FROM golang:1.18-alpine
+FROM golang:1.21-alpine
 
-ENV APP_ENV=production
 ENV GIN_MODE=release
 
 WORKDIR /usr/src/app
@@ -14,8 +13,8 @@ COPY . .
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 RUN swag fmt
 RUN swag init \
-  -d "./internal/server,./internal/controller" \
-  -g server.go \
+  -d "./internal/service,./internal/controller" \
+  -g service.go \
   --parseInternal
 
 # build
