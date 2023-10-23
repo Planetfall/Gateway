@@ -43,6 +43,11 @@ jobs:
       with:
         ref: ${{ github.ref }}
 
+    - name: Authenticate
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
     - name: Test
       run: go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
 

@@ -1,37 +1,14 @@
 package search_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/planetfall/gateway/internal/controller"
 	"github.com/planetfall/gateway/internal/controller/search"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"google.golang.org/grpc"
 )
-
-type connectionMock struct {
-	mock.Mock
-}
-
-func (m *connectionMock) GrpcConn() *grpc.ClientConn {
-	args := m.Called()
-	return args.Get(0).(*grpc.ClientConn)
-}
-
-func (m *connectionMock) Close() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
-func (m *connectionMock) AuthenticateContext(
-	ctx context.Context) (context.Context, error) {
-
-	args := m.Called(ctx)
-	return args.Get(0).(context.Context), args.Error(1)
-}
 
 func TestNewSearchController(t *testing.T) {
 	// given
