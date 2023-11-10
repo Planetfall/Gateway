@@ -39,6 +39,8 @@ type SearchControllerOptions struct {
 	Conn grpc.Connection
 }
 
+// getConn provides a grpc.Connection from the option if provided.
+// Else, it builds a new one from the default implementation.
 func getConn(opt SearchControllerOptions) (grpc.Connection, error) {
 
 	if opt.Conn != nil {
@@ -51,6 +53,8 @@ func getConn(opt SearchControllerOptions) (grpc.Connection, error) {
 	})
 }
 
+// getClient provides a Client from the option if provided.
+// Else, it builds a new one from the default implementation.
 func getClient(opt SearchControllerOptions,
 	conn grpc.Connection) Client {
 
@@ -58,7 +62,7 @@ func getClient(opt SearchControllerOptions,
 		return opt.Client
 	}
 
-	return pb.NewMusicResearcherClient(conn.GrpcConn())
+	return pb.NewMusicResearcherClient(conn.Client())
 }
 
 // NewSearchController buids a new MusicResearcher controller.

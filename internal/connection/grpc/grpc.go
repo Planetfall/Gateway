@@ -7,16 +7,10 @@ package grpc
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"strings"
 
-	"golang.org/x/oauth2"
-	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Connection is an helper, that holds the actual grpc.ClientConn
@@ -24,24 +18,25 @@ import (
 // It encapsulate the authentication, and the setup of the transport
 // credentials.
 type Connection interface {
-	GrpcConn() *grpc.ClientConn
+	Client() *grpc.ClientConn
 	Close() error
 	AuthenticateContext(context.Context) (context.Context, error)
 }
 
 type connectionImpl struct {
-	grpcConn    *grpc.ClientConn
-	tokenSource oauth2.TokenSource
+	client      *grpc.ClientConn
+	tokenSource TokenSource
+	insecure    bool
 }
 
-// GrpcConn allows read access on the grpc.ClientConn property.
-func (c *connectionImpl) GrpcConn() *grpc.ClientConn {
-	return c.grpcConn
+// Client allows read access on the grpc.ClientConn property.
+func (c *connectionImpl) Client() *grpc.ClientConn {
+	return c.client
 }
 
 // Close terminates the grpc.ClientConn connection
 func (c *connectionImpl) Close() error {
-	return c.grpcConn.Close()
+	return c.client.Close()
 }
 
 // ConnectionOptions holds the parameters for the Connection builder
@@ -51,6 +46,10 @@ type ConnectionOptions struct {
 
 	// Insecure builder parameter
 	Insecure bool
+
+	// Custom provider which provides a token source and a GRPC client
+	// connection
+	Provider Provider
 }
 
 // NewConnection builds a new GRPC connection object.
@@ -65,52 +64,36 @@ type ConnectionOptions struct {
 //
 // The host is used to setup the grpc.ClientConn.
 func NewConnection(opt ConnectionOptions) (Connection, error) {
-	creds, err := newCredentials(opt.Insecure)
-	if err != nil {
-		return nil, fmt.Errorf("getCredentials: %v", err)
-	}
 
-	dialOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(creds),
-	}
-	grpcConn, err := grpc.Dial(opt.Target, dialOpts...)
+	provider := getProvider(opt)
+
+	client, err := provider.NewClient(opt.Target, opt.Insecure)
 	if err != nil {
-		return nil, fmt.Errorf("grpc.Dial: %v", err)
+		return nil, fmt.Errorf("provider.NewClient: %v", err)
 	}
 
 	audience := buildAudienceFromTarget(opt.Target)
-	var tokenSource oauth2.TokenSource = nil
-	if !opt.Insecure {
-		tokenSource, err = newTokenSource(audience)
-		if err != nil {
-			return nil, fmt.Errorf("newTokenSource: %v", err)
-		}
+	tokenSource, err := provider.NewTokenSource(audience, opt.Insecure)
+	if err != nil {
+		return nil, fmt.Errorf("provider.NewTokenSource: %v", err)
 	}
 
 	return &connectionImpl{
-		grpcConn,
-		tokenSource,
+		client:      client,
+		tokenSource: tokenSource,
+		insecure:    opt.Insecure,
 	}, nil
 }
 
-// newCredentials provides transport credentials according to the isInsecure
-// argument:
-//   - if true, it use the [insecure] library to provide empty credentials
-//   - else, it will provide valid TLS transport credentials
-func newCredentials(isInsecure bool) (credentials.TransportCredentials, error) {
-	if isInsecure {
-		return insecure.NewCredentials(), nil
-	}
+// getProvider returns the provider given in options if not nil.
+// Else, fallback to the default provider implementation.
+func getProvider(opt ConnectionOptions) Provider {
 
-	systemRoots, err := x509.SystemCertPool()
-	if err != nil {
-		return nil, fmt.Errorf("x509.SystemCertPool: %v", err)
+	if opt.Provider != nil {
+		return opt.Provider
+	} else {
+		return &providerImpl{}
 	}
-	creds := credentials.NewTLS(&tls.Config{
-		RootCAs: systemRoots,
-	})
-
-	return creds, nil
 }
 
 // buildAudienceFromTarget builds the audience using the configured target.
@@ -137,21 +120,4 @@ func buildAudienceFromTarget(target string) string {
 	audience := fmt.Sprintf("https://%s", host)
 
 	return audience
-}
-
-// newTokenSource builds a new source which provides authentication tokens.
-// The audience is the target service host that we need authentication for.
-// This is reused from the [Cloud Run] documentation
-//
-// [Cloud Run]: https://cloud.google.com/run/docs/triggering/grpc#request-auth
-func newTokenSource(audience string) (oauth2.TokenSource, error) {
-
-	ctx := context.Background()
-
-	tokenSource, err := idtoken.NewTokenSource(ctx, audience)
-	if err != nil {
-		return nil, fmt.Errorf("idtoken.NewTokenSource: %v", err)
-	}
-
-	return tokenSource, nil
 }

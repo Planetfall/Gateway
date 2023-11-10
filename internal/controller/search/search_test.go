@@ -77,7 +77,7 @@ func TestClose_shouldFail(t *testing.T) {
 	}
 
 	errMessageGiven := "test close error"
-	connGiven.On("GrpcConn").Return(&grpc.ClientConn{})
+	connGiven.On("Client").Return(&grpc.ClientConn{})
 	connGiven.On("Close").Return(fmt.Errorf(errMessageGiven))
 	c, _ := search.NewSearchController(optGiven)
 

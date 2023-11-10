@@ -4,12 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	"golang.org/x/oauth2"
 	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
+// TokenSource is responsible for providing OAuth tokens
+type TokenSource interface {
+
+	// Token provides a valid OAuth token
+	Token() (*oauth2.Token, error)
+}
+
 // AuthenticateContext enrich an input context with an authentication token.
 // It retrieve this token using the connection configured token source.
-// If this source is not set, it returns the provided context unchanged.
+// If insecure is explicited provided, the given context is returned unchanged.
 // This is reused from the [Cloud Run] documentation
 //
 // [Cloud Run]: https://cloud.google.com/run/docs/triggering/grpc#request-auth
@@ -17,7 +25,7 @@ func (c *connectionImpl) AuthenticateContext(
 	ctx context.Context) (context.Context, error) {
 
 	// if tokenSource unset, not able to provide a token
-	if c.tokenSource == nil {
+	if c.insecure {
 		return ctx, nil
 	}
 

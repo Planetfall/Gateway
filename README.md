@@ -10,14 +10,27 @@ Main entrypoint to GRPC microservices.
 - [genproto](https://github.com/Planetfall/genproto)
 - [framework](https://github.com/Planetfall/Framework)
 
-## Tests
+## Run
 
 Get the gateway service account as a key JSON file.
+```
+gcloud iam service-accounts keys create ./gateway-key.json \
+    --iam-account=echo-slam-planetfall-gateway@echo-slam-planetfall.iam.gserviceaccount.com
+```
 
 Set the `GOOGLE_APPLICATION_CREDENTIALS` as the path to this JSON file.
 ```
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key/json/file.json
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key/json/gateway-key.json
 ```
+
+Setup your configuration file (ex: config.dev.yaml)
+
+Run
+```
+go run ./cmd/server/main.go --env development --config ./config/config.dev.yaml
+```
+
+## Tests
 
 Run the tests
 ```
@@ -27,4 +40,21 @@ go test ./...
 Run the tests with coverage
 ```
 go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+```
+
+Print the coverage in HTML
+```
+go tool cover -html=coverage.out
+```
+
+## Lint
+
+Report card
+```
+goreportcard-cli
+```
+
+Golang Lint
+```
+golangci-lint run
 ```

@@ -8,16 +8,18 @@ import (
 	"cloud.google.com/go/pubsub"
 )
 
-// jobStatus is the format of the job output retrieved from the Pub/Sub message
-type jobStatus struct {
+// JobBody is the format of the job output retrieved from the Pub/Sub message
+// Example:
+// { "message": "job is still in progress", "progress": 35 }
+type JobBody struct {
 	Message  string `json:"message"`
 	Progress int    `json:"progress"`
 }
 
-// jobBody holds the jobStatus and the job metadatas
-type jobBody struct {
+// JobStatus holds the jobStatus and the JobBody
+type JobStatus struct {
 	// The job output
-	Body jobStatus `json:"body"`
+	Body JobBody `json:"body"`
 
 	// The code attribute of the Pub/Sub message
 	Code int `json:"code"`
@@ -29,14 +31,11 @@ type jobBody struct {
 	OrderingKey string `json:"ordering_key"`
 }
 
-// parsePubsubMessage converts a received Pub/Sub message into a jobBody.
-// It reads the message attributes to retrieve a code, a status and the ordering
-// key. It also parses the message data as JSON into a jobStatus entry.
-func (*Subscriber) parsePubsubMessage(
-	pMsg *pubsub.Message) (*jobBody, error) {
+func (*subscriberImpl) NewJobStatus(
+	pMsg *pubsub.Message) (*JobStatus, error) {
 
 	// parse body
-	var jBody jobStatus
+	var jBody JobBody
 	if err := json.Unmarshal(pMsg.Data, &jBody); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal: %v", err)
 	}
@@ -62,7 +61,7 @@ func (*Subscriber) parsePubsubMessage(
 	// parse ordering key
 	orderingKey := pMsg.OrderingKey
 
-	return &jobBody{
+	return &JobStatus{
 		Body:        jBody,
 		Code:        code,
 		Status:      status,

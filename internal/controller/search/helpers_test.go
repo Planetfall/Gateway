@@ -41,7 +41,7 @@ type connectionMock struct {
 	mock.Mock
 }
 
-func (m *connectionMock) GrpcConn() *grpc.ClientConn {
+func (m *connectionMock) Client() *grpc.ClientConn {
 	args := m.Called()
 	return args.Get(0).(*grpc.ClientConn)
 }

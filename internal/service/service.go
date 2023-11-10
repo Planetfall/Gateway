@@ -15,6 +15,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/planetfall/framework/pkg/server"
+	_ "github.com/planetfall/gateway/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -127,6 +128,7 @@ func (s *Service) Start(port string) error {
 	defer s.close()
 
 	go func() {
+		s.srv.Logger.Printf("gateway listening on %v", addr)
 		err := srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			s.srv.Logger.Fatalf("ListenAndServe: %v", err)

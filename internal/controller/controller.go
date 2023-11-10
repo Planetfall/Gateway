@@ -1,3 +1,5 @@
+// Package controller provides a base helper type.
+// It holds some common behavior for all controllers to use.
 package controller
 
 import (

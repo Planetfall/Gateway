@@ -3,14 +3,12 @@
 package download
 
 import (
-	"context"
 	"fmt"
 
-	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
-	"github.com/gorilla/websocket"
-	"github.com/planetfall/gateway/internal/controller/download/subscriber"
-
 	"github.com/planetfall/gateway/internal/controller"
+	"github.com/planetfall/gateway/internal/controller/download/subscriber"
+	"github.com/planetfall/gateway/internal/controller/download/task"
+	"github.com/planetfall/gateway/internal/controller/download/websocket"
 )
 
 // DownloadController is used to interact with the youtube download job
@@ -21,18 +19,19 @@ type DownloadController struct {
 	// The path used when created new tasks in Cloud Tasks
 	queuePath string
 
-	// The client to push new tasks in Cloud Tasks
-	tasks *cloudtasks.Client
+	// The client to push new taskClient in Cloud Tasks
+	taskClient task.TaskClient
 
 	// The subscriber helper to pull Pub/Sub messages
-	sub *subscriber.Subscriber
+	sub subscriber.Subscriber
 
 	// The upgrader to upgrade HTTP request to websocket
-	upgrader websocket.Upgrader
+	websocket websocket.Websocket
 
-	// The list of allowed origins that can interact with this controller using
-	// websockets
-	origins []string
+	// The store which holds the active websockets and their job keys.
+	// It is used to retrieve the concerned websocket when a message is
+	// received.
+	websocketStore websocket.Store
 }
 
 // DownloadControllerOptions holds the parameters for the DownloadController
@@ -56,68 +55,90 @@ type DownloadControllerOptions struct {
 	// The list of allowed origins that can interact with this controller using
 	// websockets
 	Origins []string
+
+	// Custom provider
+	Provider Provider
 }
 
 // NewDownloadController builds a new DownloadController.
 // It setup the task client and the Pub/Sub helper.
-func NewDownloadController(opt DownloadControllerOptions) (*DownloadController, error) {
+func NewDownloadController(
+	opt DownloadControllerOptions) (*DownloadController, error) {
 
 	// initialize the base type
 	ctrl := controller.NewController(opt.ControllerOptions)
+
+	// setup the download controller
+	downloadCtrl := &DownloadController{
+		Controller: ctrl,
+	}
+
+	// retrieve the provider
+	provider := getProvider(opt)
+
+	// setup the task client
 
 	// builds the task queue path
 	queuePath := fmt.Sprintf(
 		"projects/%s/locations/%s/queues/%s",
 		opt.ProjectID, opt.LocationID, opt.QueueID,
 	)
-
-	// task client setup
-	ctx := context.Background()
-	taskClient, err := cloudtasks.NewClient(ctx)
+	taskClient, err := provider.NewTaskClient(queuePath, ctrl.Target)
 	if err != nil {
-		return nil, fmt.Errorf("cloudtasks.NewClient: %v", err)
+		return nil, fmt.Errorf("provider.NewTaskClient: %v", err)
+	}
+	downloadCtrl.queuePath = queuePath
+	downloadCtrl.taskClient = taskClient
+
+	// setup the subscriber
+	sub, err := provider.NewSubscriber(
+		downloadCtrl.OnReceive,
+		opt.ProjectID,
+		opt.SubscriptionID,
+		opt.ControllerOptions.Logger,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("provider.NewSubscriber: %v", err)
 	}
 
-	// pubsub client setup
-	sub, err := subscriber.NewSubscriber(
-		opt.ProjectID, opt.SubscriptionID, ctrl.Logger)
-	if err != nil {
-		return nil, fmt.Errorf("subscriber.NewSubscriber: %v", err)
-	}
 	// starts listening for pubsub messages
 	go func() {
 		if err := sub.Listen(); err != nil {
 			ctrl.Logger.Println(fmt.Errorf("subscriber.Listen: %v", err))
 		}
 	}()
+	downloadCtrl.sub = sub
 
-	// init the controller
-	downloadCtrl := &DownloadController{
-		Controller: ctrl,
-
-		queuePath: queuePath,
-		tasks:     taskClient,
-		sub:       sub,
-		origins:   opt.Origins,
-	}
+	// setup the websocket store
+	store := provider.NewWebsocketStore()
+	downloadCtrl.websocketStore = store
 
 	// setup the websocket upgrader
-	downloadCtrl.upgrader = websocket.Upgrader{
-		WriteBufferSize: 1024,
-		ReadBufferSize:  1024,
-		CheckOrigin:     downloadCtrl.checkOrigins,
+	ws, err := provider.NewWebsocket(
+		opt.Origins,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("provider.NewWebsocket: %v", err)
 	}
+	downloadCtrl.websocket = ws
 
 	return downloadCtrl, nil
 }
 
+func getProvider(opt DownloadControllerOptions) Provider {
+	if opt.Provider != nil {
+		return opt.Provider
+	} else {
+		return &providerImpl{}
+	}
+}
+
 // Close closes the task client and the Pub/Sub helper
 func (c *DownloadController) Close() error {
-	if err := c.tasks.Close(); err != nil {
+	if err := c.taskClient.Close(); err != nil {
 		return fmt.Errorf("cloudtasks.Close: %v", err)
 	}
 
 	c.sub.Close()
-
 	return nil
 }

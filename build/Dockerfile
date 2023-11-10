@@ -1,5 +1,11 @@
 FROM golang:1.21-alpine
 
+ARG PROJECT_ID
+
+ENV PROJECT_ID_ENV=${PROJECT_ID}
+
+RUN echo ${PROJECT_ID_ENV}
+
 ENV GIN_MODE=release
 
 WORKDIR /usr/src/app
@@ -21,4 +27,4 @@ RUN swag init \
 RUN apk add git
 RUN go build -v -o /usr/local/bin/app ./cmd/server
 
-CMD app
+CMD app --project ${PROJECT_ID_ENV}

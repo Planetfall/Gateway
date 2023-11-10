@@ -1,25 +1,33 @@
-package download
+package task
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 
+	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
 )
 
-func (c *DownloadController) createTask(
-	dPayload taskDownloadPayload) (*taskspb.Task, error) {
+type taskClientImpl struct {
+	client    *cloudtasks.Client
+	queuePath string
+	target    string
+}
 
-	body, err := json.Marshal(&dPayload)
+func (t *taskClientImpl) CreateTask(
+	tPayload TaskPayload) (*taskspb.Task, error) {
+
+	// json encode
+	body, err := json.Marshal(&tPayload)
 	if err != nil {
 		return nil, fmt.Errorf("json.Marshal: %v", err)
 	}
 
-	req := c.newCreateTaskRequest(body)
+	req := t.newCreateTaskRequest(body)
 
 	ctx := context.Background()
-	createdTask, err := c.tasks.CreateTask(ctx, req)
+	createdTask, err := t.client.CreateTask(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
 	}
@@ -27,15 +35,15 @@ func (c *DownloadController) createTask(
 	return createdTask, nil
 }
 
-func (c *DownloadController) newCreateTaskRequest(body []byte) *taskspb.CreateTaskRequest {
+func (t *taskClientImpl) newCreateTaskRequest(body []byte) *taskspb.CreateTaskRequest {
 
 	return &taskspb.CreateTaskRequest{
-		Parent: c.queuePath,
+		Parent: t.queuePath,
 		Task: &taskspb.Task{
 			MessageType: &taskspb.Task_HttpRequest{
 				HttpRequest: &taskspb.HttpRequest{
 					HttpMethod: taskspb.HttpMethod_POST,
-					Url:        c.Target,
+					Url:        t.target,
 					Body:       body,
 					Headers: map[string]string{
 						"Content-Type": "application/json",
@@ -44,4 +52,8 @@ func (c *DownloadController) newCreateTaskRequest(body []byte) *taskspb.CreateTa
 			},
 		},
 	}
+}
+
+func (t *taskClientImpl) Close() error {
+	return t.client.Close()
 }
