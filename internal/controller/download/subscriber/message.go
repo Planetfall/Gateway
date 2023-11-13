@@ -43,7 +43,7 @@ func (*subscriberImpl) NewJobStatus(
 	// parse code attribute
 	codeStr, exists := pMsg.Attributes["code"]
 	if !exists {
-		return nil, fmt.Errorf("pMsg.Attributes: 'code' not found")
+		return nil, fmt.Errorf("message.Attributes: 'code' not found")
 	}
 
 	// convert code to int
@@ -55,7 +55,7 @@ func (*subscriberImpl) NewJobStatus(
 	// parse status attribute
 	status, exists := pMsg.Attributes["status"]
 	if !exists {
-		return nil, fmt.Errorf("pMsg.Attributes: 'status' not found")
+		return nil, fmt.Errorf("message.Attributes: 'status' not found")
 	}
 
 	// parse ordering key

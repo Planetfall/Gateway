@@ -3,12 +3,12 @@ package task
 import (
 	"context"
 
-	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
+	"github.com/googleapis/gax-go"
 )
 
-// TaskPayload is the payload sent to the download job.
-type TaskPayload struct {
+// Task is the payload sent to the download job.
+type Task struct {
 	JobKey string `json:"job_key"`
 	Payload
 }
@@ -21,36 +21,18 @@ type Payload struct {
 	Track  string `json:"track"`  // the music track
 }
 
-// TaskClient is responsible for creating tasks in Cloud Task.
-type TaskClient interface {
-	// CreateTask creates a new task from the given payload.
-	// It returns the created task.
-	CreateTask(tPayload TaskPayload) (*taskspb.Task, error)
-
-	// Close closes the client
+type Client interface {
+	CreateTask(ctx context.Context, req *taskspb.CreateTaskRequest, opts ...gax.CallOption) (*taskspb.Task, error)
 	Close() error
 }
 
-// TaskClientOptions are the options for the TaskClient builder.
-type TaskClientOptions struct {
-	// QueuePath locates where to push new tasks.
-	QueuePath string
+// TaskClient is responsible for creating tasks in Cloud Task.
+type TaskClient interface {
 
-	// Target is the host that needs to be called by the task.
-	Target string
-}
+	// CreateTask creates a new task from the given payload.
+	// It returns the created task.
+	CreateTask(tPayload Task) (*taskspb.Task, error)
 
-// NewTaskClient is the builder for the TaskClient
-func NewTaskClient(opt TaskClientOptions) (TaskClient, error) {
-
-	ctx := context.Background()
-	client, err := cloudtasks.NewClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &taskClientImpl{
-		client:    client,
-		queuePath: opt.QueuePath,
-		target:    opt.Target,
-	}, nil
+	// Close closes the client
+	Close() error
 }

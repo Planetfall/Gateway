@@ -60,6 +60,14 @@ type DownloadControllerOptions struct {
 	Provider Provider
 }
 
+func (opt DownloadControllerOptions) getProvider() Provider {
+	if opt.Provider == nil {
+		return &providerImpl{}
+	}
+
+	return opt.Provider
+}
+
 // NewDownloadController builds a new DownloadController.
 // It setup the task client and the Pub/Sub helper.
 func NewDownloadController(
@@ -74,7 +82,7 @@ func NewDownloadController(
 	}
 
 	// retrieve the provider
-	provider := getProvider(opt)
+	provider := opt.getProvider()
 
 	// setup the task client
 
@@ -123,14 +131,6 @@ func NewDownloadController(
 	downloadCtrl.websocket = ws
 
 	return downloadCtrl, nil
-}
-
-func getProvider(opt DownloadControllerOptions) Provider {
-	if opt.Provider != nil {
-		return opt.Provider
-	} else {
-		return &providerImpl{}
-	}
 }
 
 // Close closes the task client and the Pub/Sub helper

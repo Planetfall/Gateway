@@ -79,7 +79,7 @@ func (c *DownloadController) Loop(conn websocket.Conn) error {
 	}
 
 	// create task
-	taskPayload := task.TaskPayload{
+	taskPayload := task.Task{
 		Payload: payload,
 		JobKey:  string(jKey),
 	}

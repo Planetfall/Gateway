@@ -5,18 +5,53 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	taskspb "cloud.google.com/go/cloudtasks/apiv2/cloudtaskspb"
 )
 
+// taskClientImpl is the default implementation of the TaskClient
 type taskClientImpl struct {
-	client    *cloudtasks.Client
+	client    Client
 	queuePath string
 	target    string
 }
 
+// TaskClientOptions are the options for the TaskClient builder.
+type TaskClientOptions struct {
+	// QueuePath locates where to push new tasks.
+	QueuePath string
+
+	// Target is the host that needs to be called by the task.
+	Target string
+
+	// Provider for the client
+	Provider Provider
+}
+
+func (opt TaskClientOptions) getProvider() Provider {
+	if opt.Provider == nil {
+		return &providerImpl{}
+	}
+
+	return opt.Provider
+}
+
+// NewTaskClient is the builder for the TaskClient
+func NewTaskClient(opt TaskClientOptions) (TaskClient, error) {
+
+	provider := opt.getProvider()
+	client, err := provider.NewClient()
+	if err != nil {
+		return nil, fmt.Errorf("task.NewTaskClient: %v", err)
+	}
+	return &taskClientImpl{
+		client:    client,
+		queuePath: opt.QueuePath,
+		target:    opt.Target,
+	}, nil
+}
+
 func (t *taskClientImpl) CreateTask(
-	tPayload TaskPayload) (*taskspb.Task, error) {
+	tPayload Task) (*taskspb.Task, error) {
 
 	// json encode
 	body, err := json.Marshal(&tPayload)

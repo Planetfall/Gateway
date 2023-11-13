@@ -2,6 +2,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/planetfall/gateway)](https://goreportcard.com/report/github.com/planetfall/gateway)
 [![codecov](https://codecov.io/gh/planetfall/gateway/graph/badge.svg?token=QWPH8FP2BO)](https://codecov.io/gh/planetfall/gateway)
 [![Tests](https://github.com/planetfall/gateway/actions/workflows/gateway.yml/badge.svg)](https://github.com/Planetfall/Gateway/actions/workflows/gateway.yml)
+[![Release](https://img.shields.io/github/release/gin-gonic/gin.svg?style=flat-square)](https://github.com/gin-gonic/gin/releases)
 
 # Gateway
 

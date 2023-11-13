@@ -52,6 +52,16 @@ type ConnectionOptions struct {
 	Provider Provider
 }
 
+// getProvider returns the provider given in options if not nil.
+// Else, fallback to the default provider implementation.
+func (opt ConnectionOptions) getProvider() Provider {
+	if opt.Provider == nil {
+		return &providerImpl{}
+	}
+
+	return opt.Provider
+}
+
 // NewConnection builds a new GRPC connection object.
 // It holds the actual grpc.ClientConn used to interact with a GRPC service.
 // It also provides an helper method to authenticate a context.
@@ -65,7 +75,7 @@ type ConnectionOptions struct {
 // The host is used to setup the grpc.ClientConn.
 func NewConnection(opt ConnectionOptions) (Connection, error) {
 
-	provider := getProvider(opt)
+	provider := opt.getProvider()
 
 	client, err := provider.NewClient(opt.Target, opt.Insecure)
 	if err != nil {
@@ -83,17 +93,6 @@ func NewConnection(opt ConnectionOptions) (Connection, error) {
 		tokenSource: tokenSource,
 		insecure:    opt.Insecure,
 	}, nil
-}
-
-// getProvider returns the provider given in options if not nil.
-// Else, fallback to the default provider implementation.
-func getProvider(opt ConnectionOptions) Provider {
-
-	if opt.Provider != nil {
-		return opt.Provider
-	} else {
-		return &providerImpl{}
-	}
 }
 
 // buildAudienceFromTarget builds the audience using the configured target.
