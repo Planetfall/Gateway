@@ -50,7 +50,7 @@ func (c *DownloadController) Download(g *gin.Context) {
 
 	for {
 		// main loop
-		err := c.Loop(conn)
+		err := c.NewJob(conn)
 
 		// check if ws closed
 		if c.websocket.IsClosed(err) {
@@ -60,17 +60,18 @@ func (c *DownloadController) Download(g *gin.Context) {
 
 		if err != nil {
 			c.Logger.Printf("download.Loop: %v", err)
+			websocket.WriteStatus(conn, websocket.StatusError, "failed to create new job", err.Error())
 			continue
 		}
 	}
 }
 
-func (c *DownloadController) Loop(conn websocket.Conn) error {
+func (c *DownloadController) NewJob(conn websocket.Conn) error {
 
 	// read current JSON
 	var payload task.Payload
 	if err := conn.ReadJSON(&payload); err != nil {
-		return fmt.Errorf("ws.ReadJSON: %v", err)
+		return fmt.Errorf("websocket.ReadJSON: %v", err)
 	}
 
 	jKey, err := c.websocketStore.AddNewJob(conn)
@@ -89,8 +90,10 @@ func (c *DownloadController) Loop(conn websocket.Conn) error {
 	}
 
 	// send back the created task
-	if err := conn.WriteJSON(&payload); err != nil {
-		return fmt.Errorf("websocket.WriteJSON: %v", err)
+	if err := websocket.WriteStatus(conn, websocket.StatusOK, "task created",
+		taskPayload); err != nil {
+
+		return fmt.Errorf("websocket.WriteStatus: %v", err)
 	}
 
 	c.Logger.Printf("created task %s", createdTask.Name)
@@ -119,15 +122,17 @@ func (c *DownloadController) OnReceive(
 
 	// retrieve the websocket using the message ordering key
 	orderingKey := websocket.Key(jobStatus.OrderingKey)
-	ws, err := c.websocketStore.GetWebsocket(orderingKey)
+	conn, err := c.websocketStore.GetWebsocket(orderingKey)
 	if err != nil {
 		c.Logger.Println(fmt.Errorf("store.GetWebsocket: %v", err))
 		return
 	}
 
 	// notify to ws
-	if err := ws.WriteJSON(&jobStatus); err != nil {
-		c.Logger.Println(fmt.Errorf("websocket.WriteJSON: %v", err))
+	if err := websocket.WriteStatus(conn, websocket.StatusOK,
+		"job status update", jobStatus); err != nil {
+
+		c.Logger.Println(fmt.Errorf("websocket.WriteStatus: %v", err))
 		return
 	}
 }

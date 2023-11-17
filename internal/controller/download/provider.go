@@ -46,6 +46,7 @@ func (p *providerImpl) NewTaskClient(
 	// task client setup
 	opt := task.TaskClientOptions{
 		QueuePath: queuePath,
+		Target:    target,
 	}
 	taskClient, err := task.NewTaskClient(opt)
 	if err != nil {
