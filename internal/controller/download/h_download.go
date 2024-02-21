@@ -60,7 +60,10 @@ func (c *DownloadController) Download(g *gin.Context) {
 
 		if err != nil {
 			c.Logger.Printf("download.Loop: %v", err)
-			websocket.WriteStatus(conn, websocket.StatusError, "failed to create new job", err.Error())
+			if err := websocket.WriteStatus(conn, websocket.StatusError, "failed to create new job", err.Error()); err != nil {
+				c.Logger.Println(fmt.Errorf("websocket.WriteStatus: %v", err))
+				return
+			}
 			continue
 		}
 	}
